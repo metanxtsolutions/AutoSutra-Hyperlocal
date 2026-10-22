@@ -78,6 +78,7 @@ jobs:
           FP="$(keytool -list -v -keystore "$ANDROID_KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias autosutra | grep 'SHA256:' | awk '{print $2}')"
           echo "HOST=$HOST" >> "$GITHUB_ENV"
           echo "FINGERPRINT=$FP" >> "$GITHUB_ENV"
+          echo "APK opens https://$HOST; signing certificate SHA-256: $FP"
           {
             echo "### AutoSutra preview APK"
             echo "- Opens: https://$HOST"
