@@ -36,6 +36,13 @@
       "when": 1792695302331,
       "tag": "0004_creative_templates",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792696815370,
+      "tag": "0005_finance_controls",
+      "breakpoints": true
     }
   ]
 }

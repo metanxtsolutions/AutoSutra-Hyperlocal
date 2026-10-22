@@ -10,13 +10,16 @@ const tileHost = (() => {
 
 // Next.js injects inline bootstrap scripts, so script-src needs 'unsafe-inline'
 // unless nonce-based CSP is adopted (see docs/SECURITY.md).
+const razorpay = process.env.PAYMENT_GATEWAY === "razorpay";
+
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}${razorpay ? " https://checkout.razorpay.com" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${tileHost}`,
   "font-src 'self'",
-  "connect-src 'self'",
+  `connect-src 'self'${razorpay ? " https://api.razorpay.com https://lumberjack.razorpay.com" : ""}`,
+  `frame-src ${razorpay ? "https://api.razorpay.com https://checkout.razorpay.com" : "'none'"}`,
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",
