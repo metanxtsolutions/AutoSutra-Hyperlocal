@@ -19,14 +19,14 @@ export function RecoveryCodes() {
   if (!codes) return null;
   const text = `AutoSutra recovery codes\nEach code works once. Keep them somewhere safe.\n\n${codes.join("\n")}\n`;
   return (
-    <div role="status" className="space-y-4 rounded-lg border border-ok-100 bg-ok-100/40 p-4">
+    <div role="status" data-codes className="space-y-4 rounded-lg border border-ok-100 bg-ok-100/40 p-4">
       <div>
         <p className="font-semibold text-ink-950">{state.message}</p>
         <p className="mt-1 text-sm text-ink-700">
           Save these recovery codes now. Each one lets you sign in once if you lose your phone. They will not be shown again.
         </p>
       </div>
-      <ol className="grid grid-cols-2 gap-2 font-mono text-sm sm:grid-cols-2">
+      <ol className="grid grid-cols-2 gap-2 font-mono text-sm">
         {codes.map((c) => (
           <li key={c} className="rounded-md bg-white px-3 py-2 text-center ring-1 ring-ink-200">
             {c}

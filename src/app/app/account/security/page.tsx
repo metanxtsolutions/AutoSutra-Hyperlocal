@@ -71,7 +71,7 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
         )}
 
         {enrolment && (
-          <Card>
+          <Card className="[&:has([data-codes])_[data-start-again]]:hidden">
             <CardHeader title="Scan and confirm" />
             <ActionForm action={confirmTwoStepAction} stayOnSuccess>
               <HideOnSuccess>
@@ -95,9 +95,11 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
               </HideOnSuccess>
               <RecoveryCodes />
             </ActionForm>
-            <ActionForm action={startTwoStepAction} showSuccess={false} className="mt-4">
-              <button type="submit" className="text-sm text-road-600 underline">Start again with a new code</button>
-            </ActionForm>
+            <div data-start-again className="mt-4">
+              <ActionForm action={startTwoStepAction} showSuccess={false}>
+                <button type="submit" className="text-sm text-road-600 underline">Start again with a new code</button>
+              </ActionForm>
+            </div>
           </Card>
         )}
 

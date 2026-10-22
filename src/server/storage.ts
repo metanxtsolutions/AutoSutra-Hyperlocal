@@ -2,6 +2,9 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { eq } from "drizzle-orm";
+import { getDb } from "./db/client";
+import { storedObjects } from "./db/schema";
 import { getEnv } from "./env";
 import { ValidationError } from "./errors";
 
@@ -90,6 +93,13 @@ function localPath(key: string): string {
 
 export async function putObject(key: string, body: Buffer, contentType: string): Promise<void> {
   const env = getEnv();
+  if (env.STORAGE_DRIVER === "database") {
+    await getDb()
+      .insert(storedObjects)
+      .values({ key, contentType, size: body.length, bytes: body })
+      .onConflictDoUpdate({ target: storedObjects.key, set: { contentType, size: body.length, bytes: body } });
+    return;
+  }
   if (env.STORAGE_DRIVER === "s3") {
     await client().send(new PutObjectCommand({ Bucket: env.STORAGE_BUCKET, Key: key, Body: body, ContentType: contentType }));
     return;
@@ -101,6 +111,11 @@ export async function putObject(key: string, body: Buffer, contentType: string):
 
 export async function getObject(key: string): Promise<Buffer> {
   const env = getEnv();
+  if (env.STORAGE_DRIVER === "database") {
+    const row = await getDb().query.storedObjects.findFirst({ where: eq(storedObjects.key, key) });
+    if (!row) throw new Error("Stored object not found");
+    return Buffer.from(row.bytes);
+  }
   if (env.STORAGE_DRIVER === "s3") {
     const res = await client().send(new GetObjectCommand({ Bucket: env.STORAGE_BUCKET, Key: key }));
     return Buffer.from(await res.Body!.transformToByteArray());

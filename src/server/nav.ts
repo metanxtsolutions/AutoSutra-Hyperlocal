@@ -36,6 +36,7 @@ export function adminNav(actor: Actor, counts: { approvals?: number; diffs?: num
   items.push({ href: "/admin/users", label: "Users", section: "Customers" });
   items.push({ href: "/admin/support", label: "Support tickets", section: "Customers", badge: counts.tickets });
   items.push({ href: "/admin/contact-requests", label: "Contact requests", section: "Customers" });
+  items.push({ href: "/admin/emails", label: "Emails", section: "Customers" });
   items.push({ href: "/admin/campaigns", label: "Campaign operations", section: "Campaigns", badge: counts.approvals });
   items.push({ href: "/admin/connections", label: "Provider connections", section: "Campaigns" });
   items.push({ href: "/admin/jobs", label: "Jobs & API health", section: "Campaigns" });

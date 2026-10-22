@@ -14,6 +14,7 @@ import {
   bigint,
   boolean,
   check,
+  customType,
   date,
   doublePrecision,
   index,
@@ -292,6 +293,17 @@ export const outboundEmails = pgTable("outbound_emails", {
   providerMessageId: text("provider_message_id"),
   lastError: text("last_error"),
   sentAt: timestamp("sent_at", { withTimezone: true }),
+  createdAt: createdAt(),
+});
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });
+
+/** File contents for STORAGE_DRIVER=database (previews and small installs). */
+export const storedObjects = pgTable("stored_objects", {
+  key: text("key").primaryKey(),
+  contentType: text("content_type").notNull(),
+  size: integer("size").notNull(),
+  bytes: bytea("bytes").notNull(),
   createdAt: createdAt(),
 });
 

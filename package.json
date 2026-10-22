@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "npm run db:migrate && npm run db:seed -- --if-enabled && next build",
     "start": "next start",
     "worker": "tsx --conditions=react-server src/server/jobs/worker.ts",
     "lint": "eslint .",

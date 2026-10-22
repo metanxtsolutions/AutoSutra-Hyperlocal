@@ -17,6 +17,9 @@ const providerMode = z.enum(["off", "demo", "live"]).default("demo");
 
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  // "preview" is a hosted demo: production build and secrets, but demo advertising only,
+  // no live payments, a visible banner, and seeded demo accounts allowed.
+  APP_STAGE: z.enum(["development", "preview", "production"]).optional(),
   APP_URL: z.string().url().default("http://localhost:3000"),
   DATABASE_URL: z.string().min(1).default("postgres://autosutra:autosutra@localhost:5432/autosutra_dev"),
   AUTH_SECRET: z.string().min(32).default("dev-only-auth-secret-change-me-0123456789abcdef"),
@@ -35,7 +38,8 @@ const schema = z.object({
   // starttls: port 587 with a required TLS upgrade. implicit: TLS from the start (port 465). none: local testing only.
   SMTP_TLS: z.enum(["starttls", "implicit", "none"]).default("starttls"),
 
-  STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
+  // local: files on disk (development). database: files in PostgreSQL (previews, small installs). s3: any S3-compatible store.
+  STORAGE_DRIVER: z.enum(["local", "database", "s3"]).default("local"),
   STORAGE_LOCAL_DIR: z.string().default("./storage"),
   STORAGE_ENDPOINT: z.string().default(""),
   STORAGE_REGION: z.string().default("auto"),
@@ -66,11 +70,15 @@ const schema = z.object({
   PAYMENTS_LIVE: bool,
 
   MAPS_API_KEY: z.string().default(""),
+  // Android app (Trusted Web Activity) that may open this site full screen: package name and
+  // comma-separated SHA-256 signing certificate fingerprints, served at /.well-known/assetlinks.json.
+  ANDROID_APP_PACKAGE: z.string().default(""),
+  ANDROID_APP_SHA256: z.string().default(""),
   ERROR_MONITORING_DSN: z.string().default(""),
   REDIS_URL: z.string().default(""),
 });
 
-export type Env = z.infer<typeof schema>;
+export type Env = Omit<z.infer<typeof schema>, "APP_STAGE"> & { APP_STAGE: "development" | "preview" | "production" };
 
 let cached: Env | null = null;
 
@@ -81,7 +89,7 @@ export function getEnv(): Env {
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
-  const env = parsed.data;
+  const env = { ...parsed.data, APP_STAGE: parsed.data.APP_STAGE ?? (parsed.data.NODE_ENV === "production" ? "production" : "development") };
   if (env.NODE_ENV === "production") assertProductionSafe(env);
   cached = env;
   return env;
@@ -111,6 +119,10 @@ function assertProductionSafe(env: Env): void {
   if (!env.CRON_SECRET || env.CRON_SECRET.length < 32) problems.push("CRON_SECRET must be at least 32 characters");
   if (env.PAYMENTS_LIVE && env.PAYMENT_GATEWAY === "mock") problems.push("PAYMENTS_LIVE cannot use the mock gateway");
   if (env.STORAGE_DRIVER === "local") problems.push("STORAGE_DRIVER=local is not suitable for production");
+  if (env.APP_STAGE === "preview") {
+    if (env.ADS_META_MODE === "live" || env.ADS_GOOGLE_MODE === "live") problems.push("A preview must not publish live ads (set ADS_META_MODE and ADS_GOOGLE_MODE to demo)");
+    if (env.PAYMENTS_LIVE) problems.push("A preview must not take live payments (PAYMENTS_LIVE=false)");
+  }
   if (env.EMAIL_DRIVER === "smtp" && !env.SMTP_HOST) problems.push("SMTP_HOST is required when EMAIL_DRIVER=smtp");
   if (env.EMAIL_DRIVER === "smtp" && env.SMTP_TLS === "none") problems.push("SMTP_TLS=none sends credentials and email in clear text");
   if (problems.length) throw new Error(`Unsafe production configuration:\n${problems.join("\n")}`);

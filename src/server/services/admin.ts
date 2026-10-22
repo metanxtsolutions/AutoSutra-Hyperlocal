@@ -8,6 +8,7 @@ import {
   jobs,
   organisationMemberships,
   organisations,
+  outboundEmails,
   publicationAttempts,
   reconciliationDifferences,
   refunds,
@@ -19,6 +20,7 @@ import { audit } from "../audit";
 import { requirePlatform, type Actor } from "../auth/context";
 import { PLATFORM_ROLES, type PlatformRole } from "../auth/permissions";
 import { ForbiddenError, NotFoundError, ValidationError } from "../errors";
+import { getEnv } from "../env";
 
 export async function overview(db: DbOrTx, actor: Actor) {
   requirePlatform(actor, "platform.view_all");
@@ -123,6 +125,17 @@ export async function retryJob(db: Database, actor: Actor, jobId: string) {
   if (!["dead", "failed"].includes(job.status)) throw new ValidationError("Only failed jobs can be retried");
   await db.update(jobs).set({ status: "queued", attempts: 0, runAt: new Date(), lastError: null }).where(eq(jobs.id, jobId));
   await audit(db, actor, { action: "job.retried", entityType: "job", entityId: jobId, summary: `Retried ${job.type} job` });
+}
+
+/**
+ * Recent outgoing emails for support ("did my verification email go out?").
+ * Bodies carry one-time links, so they are only returned outside production.
+ */
+export async function listEmails(db: DbOrTx, actor: Actor) {
+  requirePlatform(actor, "platform.view_all");
+  const showBodies = getEnv().APP_STAGE !== "production";
+  const rows = await db.select().from(outboundEmails).orderBy(desc(outboundEmails.createdAt)).limit(200);
+  return { showBodies, rows: rows.map((r) => ({ ...r, body: showBodies ? r.body : null })) };
 }
 
 export async function listContactRequests(db: DbOrTx, actor: Actor) {

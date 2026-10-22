@@ -32,8 +32,16 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["pg"],
   experimental: { serverActions: { bodySizeLimit: "26mb" } },
+  async rewrites() {
+    return [{ source: "/.well-known/assetlinks.json", destination: "/api/assetlinks" }];
+  },
   async headers() {
     return [
+      {
+        // The service worker must always be fetched fresh so updates reach installed apps.
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
+      },
       {
         source: "/:path*",
         headers: [

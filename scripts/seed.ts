@@ -1,16 +1,20 @@
 import "../src/server/load-env";
 /**
- * Development seed. Creates a platform super admin and a demo dealer group.
- * Refuses to run in production.
+ * Demo seed. Creates AutoSutra staff accounts and a demo dealer group.
+ * Runs in development and on hosted previews (APP_STAGE=preview); refuses
+ * production. A preview needs SEED_PASSWORD, so its demo accounts never use
+ * the published development password.
  *
  *   npm run db:seed
+ *   npm run db:seed -- --if-enabled    (deploy builds: only when SEED_DEMO_DATA=true)
  */
 import { eq, sql } from "drizzle-orm";
 import { closeDb, getDb } from "../src/server/db/client";
 import { dealerships, locations, organisationMemberships, organisations, users } from "../src/server/db/schema";
 import { hashPassword } from "../src/server/crypto";
 
-const PASSWORD = process.env.SEED_PASSWORD ?? "autosutra-dev-2026";
+const STAGE = process.env.APP_STAGE ?? (process.env.NODE_ENV === "production" ? "production" : "development");
+const PASSWORD = process.env.SEED_PASSWORD || (STAGE === "development" ? "autosutra-dev-2026" : "");
 
 async function upsertUser(email: string, name: string, platformRole: "super_admin" | "finance_admin" | "campaign_ops" | null) {
   const db = getDb();
@@ -24,7 +28,13 @@ async function upsertUser(email: string, name: string, platformRole: "super_admi
 }
 
 async function main() {
-  if (process.env.NODE_ENV === "production") throw new Error("Refusing to seed a production database");
+  if (process.argv.includes("--if-enabled") && process.env.SEED_DEMO_DATA !== "true") {
+    console.log("Demo data not requested (SEED_DEMO_DATA is not true)");
+    await closeDb();
+    return;
+  }
+  if (STAGE === "production") throw new Error("Refusing to seed a production database");
+  if (PASSWORD.length < 12) throw new Error("Set SEED_PASSWORD (at least 12 characters) to seed a preview");
   const db = getDb();
   await upsertUser("admin@autosutra.local", "Platform Admin", "super_admin");
   await upsertUser("finance@autosutra.local", "Finance Admin", "finance_admin");
@@ -73,7 +83,7 @@ async function main() {
       { organisationId: org.id, dealershipId: d.id, name: "Goregaon Service Centre", kind: "service_centre", address: "Aarey Road, Goregaon East", city: "Mumbai", state: "Maharashtra", pincode: "400063", latitude: 19.1663, longitude: 72.8526, defaultRadiusKm: 3 },
     ]);
   }
-  console.log(`Seeded. Sign in with any of the seeded emails and password: ${PASSWORD}`);
+  console.log(STAGE === "development" ? `Seeded. Sign in with any of the seeded emails and password: ${PASSWORD}` : "Seeded. Sign in with the seeded emails and the SEED_PASSWORD value.");
   await closeDb();
 }
 
