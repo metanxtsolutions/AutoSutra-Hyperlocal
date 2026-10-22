@@ -1,0 +1,90 @@
+"use client";
+
+import { createContext, useActionState, useContext, useEffect, useRef, type ReactNode } from "react";
+import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
+import type { ActionState } from "@/server/actions";
+import { buttonClass } from "./button";
+import { cn } from "@/lib/cn";
+
+type Action = (state: ActionState, formData: FormData) => Promise<ActionState>;
+
+const FormStateContext = createContext<ActionState>({});
+
+/** Field errors and echoed values from the last submission of the surrounding ActionForm. */
+export function useFormState(): ActionState {
+  return useContext(FormStateContext);
+}
+
+export function ActionForm({
+  action,
+  children,
+  className,
+  resetOnSuccess = false,
+  successRedirect,
+  showSuccess = true,
+}: {
+  action: Action;
+  children: ReactNode;
+  className?: string;
+  resetOnSuccess?: boolean;
+  successRedirect?: string;
+  showSuccess?: boolean;
+}) {
+  const [state, formAction] = useActionState(action, {});
+  const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
+  useEffect(() => {
+    if (state.ok) {
+      if (resetOnSuccess) formRef.current?.reset();
+      if (successRedirect) router.push(successRedirect);
+      else router.refresh();
+    }
+  }, [state, resetOnSuccess, successRedirect, router]);
+  return (
+    <FormStateContext.Provider value={state}>
+      <form ref={formRef} action={formAction} className={cn("space-y-4", className)} noValidate>
+        {state.error && (
+          <div role="alert" className="rounded-lg border border-bad-100 bg-bad-100/60 px-4 py-3 text-sm text-bad-700">
+            {state.error}
+          </div>
+        )}
+        {state.ok && showSuccess && state.message && (
+          <div role="status" className="rounded-lg border border-ok-100 bg-ok-100/60 px-4 py-3 text-sm text-ok-700">
+            {state.message}
+          </div>
+        )}
+        {children}
+      </form>
+    </FormStateContext.Provider>
+  );
+}
+
+export function SubmitButton({
+  children,
+  variant = "primary",
+  size = "md",
+  className,
+  pendingLabel = "Working…",
+}: {
+  children: ReactNode;
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "dark";
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  pendingLabel?: string;
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass(variant, size, className)}>
+      {pending && <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+      {pending ? pendingLabel : children}
+    </button>
+  );
+}
+
+/** Shows the field error for `name` from the surrounding ActionForm. */
+export function FieldError({ name }: { name: string }) {
+  const state = useFormState();
+  const msg = state.fieldErrors?.[name];
+  return msg ? <p className="text-xs font-medium text-bad-700">{msg}</p> : null;
+}

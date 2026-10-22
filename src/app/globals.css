@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* AutoSutra design tokens. Colours meet WCAG AA contrast on their intended backgrounds. */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-ink-950: #0a1222;
+  --color-ink-900: #0f1b31;
+  --color-ink-800: #172743;
+  --color-ink-700: #24385c;
+  --color-ink-600: #3a4f75;
+  --color-ink-500: #5b6f93;
+  --color-ink-400: #8696b3;
+  --color-ink-300: #b5c0d4;
+  --color-ink-200: #d7deea;
+  --color-ink-100: #ebeff6;
+  --color-ink-50: #f5f7fb;
+
+  /* Brand accent: signal amber, used sparingly for primary actions and highlights. */
+  --color-brand-700: #b45309;
+  --color-brand-600: #d97706;
+  --color-brand-500: #f59e0b;
+  --color-brand-100: #fef3c7;
+  --color-brand-50: #fffbeb;
+
+  --color-road-600: #1d4ed8;
+  --color-road-500: #2563eb;
+  --color-road-100: #dbeafe;
+
+  --color-ok-700: #15803d;
+  --color-ok-100: #dcfce7;
+  --color-warn-700: #a16207;
+  --color-warn-100: #fef9c3;
+  --color-bad-700: #b91c1c;
+  --color-bad-100: #fee2e2;
+
+  --radius-card: 0.75rem;
+}
+
+@layer base {
+  html { color-scheme: light; }
+  body { @apply bg-ink-50 text-ink-900 antialiased; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-road-500; }
+  h1, h2, h3 { @apply text-ink-950; }
+}
+
+.leaflet-container { font: inherit; }
