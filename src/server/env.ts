@@ -51,6 +51,7 @@ const schema = z.object({
   GOOGLE_ADS_DEVELOPER_TOKEN: z.string().default(""),
   GOOGLE_ADS_LOGIN_CUSTOMER_ID: z.string().default(""),
   GOOGLE_ADS_API_VERSION: z.string().regex(/^v\d+$/).default("v21"),
+  GOOGLE_ADS_INITIAL_STATUS: z.enum(["PAUSED", "ENABLED"]).default("PAUSED"),
 
   PAYMENT_GATEWAY: z.enum(["mock", "razorpay"]).default("mock"),
   PAYMENT_GATEWAY_KEY: z.string().default(""),

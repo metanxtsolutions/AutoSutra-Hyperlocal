@@ -29,6 +29,13 @@
       "when": 1792694641263,
       "tag": "0003_default_plans",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792695302331,
+      "tag": "0004_creative_templates",
+      "breakpoints": true
     }
   ]
 }

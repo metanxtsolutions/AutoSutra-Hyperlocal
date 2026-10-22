@@ -102,3 +102,57 @@ export async function expectDbError(promise: Promise<unknown>, pattern: RegExp) 
   }
   throw new Error(`Expected a database error matching ${pattern}`);
 }
+
+/** A campaign that passes readiness checks on Meta in demo mode. */
+export async function readyCampaign(t: Awaited<ReturnType<typeof makeTenant>>, opts: { providers?: ("meta" | "google")[]; budgetRupees?: number } = {}) {
+  const campaigns = await import("@/server/services/campaigns");
+  const db = getDb();
+  const providers = opts.providers ?? ["meta"];
+  const c = await campaigns.createDraft(db, t.actor, t.org.id, {
+    dealershipId: t.dealer.id,
+    primaryLocationId: t.location.id,
+    name: "Test drive drive",
+    objective: "test_drive_enquiries",
+  });
+  await campaigns.updateProduct(db, t.actor, c.id, {
+    name: "Test drive drive",
+    objective: "test_drive_enquiries",
+    brand: "Tata",
+    model: "Nexon",
+    priceVerified: false,
+    financeApproved: false,
+  });
+  await campaigns.setPlatforms(db, t.actor, c.id, { providers });
+  await campaigns.updateTargeting(db, t.actor, c.id, {
+    targets: [{ locationId: t.location.id, radiusKm: 5, includePincodes: "", excludePincodes: "" }],
+    ageMin: 21,
+    ageMax: 60,
+    languages: ["en"],
+    placements: "automatic",
+    keywords: "nexon test drive, tata nexon mumbai, nexon showroom",
+  });
+  const full = await campaigns.loadCampaign(db, c.id);
+  const start = new Date(Date.now() + 2 * 86400_000).toISOString().slice(0, 10);
+  const end = new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10);
+  const budget = String(opts.budgetRupees ?? 10000);
+  const allocations: Record<string, { lifetime: string; daily: string }> = {};
+  for (const p of full!.platforms) allocations[`${p.platform.id}:${t.location.id}`] = { lifetime: budget, daily: "" };
+  await campaigns.updateBudget(db, t.actor, c.id, {
+    startDate: start,
+    endDate: end,
+    maxAuthorisedSpend: String((opts.budgetRupees ?? 10000) * providers.length),
+    alertThresholdPct: "80",
+    allocations,
+  });
+  await campaigns.updateCreative(db, t.actor, c.id, {
+    headline: "Test drive the Nexon",
+    primaryText: "Book a test drive at our Mumbai showroom.",
+    description: "",
+    headlines: "Test drive Nexon\nNexon in Mumbai\nBook a test drive",
+    descriptions: "Book a Nexon test drive near you.\nVisit our showroom this week.",
+    callToAction: "BOOK_NOW",
+    landingUrl: "https://example.com/test-drive",
+    assetIds: [],
+  });
+  return c;
+}
