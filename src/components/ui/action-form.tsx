@@ -23,6 +23,7 @@ export function ActionForm({
   resetOnSuccess = false,
   successRedirect,
   showSuccess = true,
+  stayOnSuccess = false,
 }: {
   action: Action;
   children: ReactNode;
@@ -30,6 +31,8 @@ export function ActionForm({
   resetOnSuccess?: boolean;
   successRedirect?: string;
   showSuccess?: boolean;
+  /** Keep the result on screen (no refresh), e.g. to show recovery codes once. */
+  stayOnSuccess?: boolean;
 }) {
   const [state, formAction] = useActionState(action, {});
   const formRef = useRef<HTMLFormElement>(null);
@@ -38,6 +41,7 @@ export function ActionForm({
   useEffect(() => {
     if (!state.ok) return;
     if (resetOnSuccess) formRef.current?.reset();
+    if (stayOnSuccess) return;
     if (successRedirect) {
       router.push(successRedirect);
     } else if (showSuccess && state.message) {

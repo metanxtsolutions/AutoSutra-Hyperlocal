@@ -26,8 +26,14 @@ const schema = z.object({
     .refine((v) => Buffer.from(v, "base64").length === 32, "TOKEN_ENCRYPTION_KEY must be 32 bytes, base64 encoded"),
   CRON_SECRET: z.string().default(""),
 
-  EMAIL_DRIVER: z.enum(["outbox"]).default("outbox"),
+  EMAIL_DRIVER: z.enum(["outbox", "smtp"]).default("outbox"),
   EMAIL_FROM: z.string().default("AutoSutra <no-reply@localhost>"),
+  SMTP_HOST: z.string().default(""),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+  SMTP_USER: z.string().default(""),
+  SMTP_PASSWORD: z.string().default(""),
+  // starttls: port 587 with a required TLS upgrade. implicit: TLS from the start (port 465). none: local testing only.
+  SMTP_TLS: z.enum(["starttls", "implicit", "none"]).default("starttls"),
 
   STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
   STORAGE_LOCAL_DIR: z.string().default("./storage"),
@@ -105,5 +111,7 @@ function assertProductionSafe(env: Env): void {
   if (!env.CRON_SECRET || env.CRON_SECRET.length < 32) problems.push("CRON_SECRET must be at least 32 characters");
   if (env.PAYMENTS_LIVE && env.PAYMENT_GATEWAY === "mock") problems.push("PAYMENTS_LIVE cannot use the mock gateway");
   if (env.STORAGE_DRIVER === "local") problems.push("STORAGE_DRIVER=local is not suitable for production");
+  if (env.EMAIL_DRIVER === "smtp" && !env.SMTP_HOST) problems.push("SMTP_HOST is required when EMAIL_DRIVER=smtp");
+  if (env.EMAIL_DRIVER === "smtp" && env.SMTP_TLS === "none") problems.push("SMTP_TLS=none sends credentials and email in clear text");
   if (problems.length) throw new Error(`Unsafe production configuration:\n${problems.join("\n")}`);
 }

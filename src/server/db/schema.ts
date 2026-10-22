@@ -201,6 +201,11 @@ export const users = pgTable(
     platformRole: platformRole("platform_role"),
     status: userStatus("status").notNull().default("active"),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    // Two-step verification (TOTP). The secret is encrypted; enabled_at is null while enrolment is unconfirmed.
+    totpSecretEnc: text("totp_secret_enc"),
+    totpEnabledAt: timestamp("totp_enabled_at", { withTimezone: true }),
+    // Last accepted 30-second time step, so a code cannot be used twice.
+    totpLastStep: bigint("totp_last_step", { mode: "number" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -219,9 +224,45 @@ export const sessions = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     ip: text("ip"),
     userAgent: text("user_agent"),
+    // Set when the sign-in (or enrolment in this session) passed two-step verification.
+    mfaVerifiedAt: timestamp("mfa_verified_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("sessions_token_hash_key").on(t.tokenHash), index("sessions_user_idx").on(t.userId)],
+);
+
+/** A password-verified sign-in waiting for its two-step code. */
+export const mfaChallenges = pgTable(
+  "mfa_challenges",
+  {
+    id: id(),
+    tokenHash: text("token_hash").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    attempts: integer("attempts").notNull().default(0),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    ip: text("ip"),
+    userAgent: text("user_agent"),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("mfa_challenges_token_hash_key").on(t.tokenHash)],
+);
+
+/** Single-use recovery codes for two-step verification, stored as hashes. */
+export const mfaRecoveryCodes = pgTable(
+  "mfa_recovery_codes",
+  {
+    id: id(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    codeHash: text("code_hash").notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("mfa_recovery_codes_user_idx").on(t.userId), uniqueIndex("mfa_recovery_codes_hash_key").on(t.codeHash)],
 );
 
 export const emailTokens = pgTable(
@@ -247,6 +288,10 @@ export const outboundEmails = pgTable("outbound_emails", {
   body: text("body").notNull(),
   driver: text("driver").notNull(),
   status: text("status").notNull().default("queued"),
+  attempts: integer("attempts").notNull().default(0),
+  providerMessageId: text("provider_message_id"),
+  lastError: text("last_error"),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
   createdAt: createdAt(),
 });
 

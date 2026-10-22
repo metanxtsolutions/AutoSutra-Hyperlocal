@@ -7,6 +7,7 @@ import { getDb } from "@/server/db/client";
 import * as campaigns from "@/server/services/campaigns";
 import * as publishing from "@/server/services/publishing";
 import { enqueue } from "@/server/jobs/queue";
+import { processQueueSoon } from "@/server/jobs/kick";
 
 export async function createCampaignAction(_: ActionState, fd: FormData): Promise<ActionState> {
   let id = "";
@@ -173,6 +174,7 @@ export async function syncNowAction(campaignId: string, _: ActionState, fd: Form
     for (const { platform } of full.platforms.filter((p) => p.platform.mode === "live" && p.platform.publishedAt)) {
       await enqueue(db, "sync_platform", { platformId: platform.id }, { idempotencyKey: `sync:${platform.id}:manual:${slot}`, maxAttempts: 3 });
     }
+    processQueueSoon();
     return "Sync queued. Results appear when the provider responds.";
   });
 }

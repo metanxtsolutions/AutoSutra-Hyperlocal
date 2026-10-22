@@ -32,6 +32,8 @@ export interface ActorMembership {
 export interface Actor {
   user: ActorUser;
   membership: ActorMembership | null;
+  /** The current session passed two-step verification. */
+  mfaVerified: boolean;
   ip?: string | null;
 }
 
@@ -46,7 +48,13 @@ export function isSystem(actor: AnyActor): actor is SystemActor {
   return "system" in actor;
 }
 
-export async function loadActor(db: DbOrTx, userId: string, organisationId: string | null, ip?: string | null): Promise<Actor | null> {
+export async function loadActor(
+  db: DbOrTx,
+  userId: string,
+  organisationId: string | null,
+  ip?: string | null,
+  opts: { mfaVerified?: boolean } = {},
+): Promise<Actor | null> {
   const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
   if (!user || user.status !== "active") return null;
   let membership: ActorMembership | null = null;
@@ -83,6 +91,7 @@ export async function loadActor(db: DbOrTx, userId: string, organisationId: stri
       emailVerified: !!user.emailVerifiedAt,
     },
     membership,
+    mfaVerified: !!opts.mfaVerified,
     ip,
   };
 }
@@ -91,9 +100,18 @@ export function hasPlatform(actor: Actor, permission: PlatformPermission): boole
   return platformRoleHas(actor.user.platformRole, permission);
 }
 
+/** Raised when an action needs a session that passed two-step verification. */
+export class TwoStepRequiredError extends ForbiddenError {}
+
+const TWO_STEP_MESSAGE = "Turn on two-step verification (Account, Two-step verification) and sign in with it to do this.";
+
 export function requirePlatform(actor: Actor, permission: PlatformPermission): void {
   if (!hasPlatform(actor, permission)) throw new ForbiddenError("This action needs AutoSutra staff permissions");
+  if (!actor.mfaVerified) throw new TwoStepRequiredError(TWO_STEP_MESSAGE);
 }
+
+/** Organisation permissions that move money, so they need a two-step verified session. */
+const TWO_STEP_ORG_PERMISSIONS: readonly OrgPermission[] = ["wallet.deposit", "wallet.refund_request"];
 
 /** Platform permission that substitutes for an organisation permission when staff act on a tenant. */
 const STAFF_EQUIVALENT: Partial<Record<OrgPermission, PlatformPermission>> = {
@@ -114,7 +132,7 @@ const STAFF_EQUIVALENT: Partial<Record<OrgPermission, PlatformPermission>> = {
 export function can(actor: Actor, organisationId: string, permission: OrgPermission): boolean {
   if (actor.membership?.organisationId === organisationId && roleHas(actor.membership.role, permission)) return true;
   const staff = STAFF_EQUIVALENT[permission];
-  return !!staff && hasPlatform(actor, staff);
+  return !!staff && hasPlatform(actor, staff) && actor.mfaVerified;
 }
 
 /**
@@ -123,7 +141,12 @@ export function can(actor: Actor, organisationId: string, permission: OrgPermiss
  * tenants' records are indistinguishable from records that do not exist.
  */
 export function requireOrg(actor: Actor, organisationId: string, permission: OrgPermission): void {
-  if (can(actor, organisationId, permission)) return;
+  if (can(actor, organisationId, permission)) {
+    if (TWO_STEP_ORG_PERMISSIONS.includes(permission) && !actor.mfaVerified) throw new TwoStepRequiredError(TWO_STEP_MESSAGE);
+    return;
+  }
+  const staff = STAFF_EQUIVALENT[permission];
+  if (staff && hasPlatform(actor, staff) && !actor.mfaVerified) throw new TwoStepRequiredError(TWO_STEP_MESSAGE);
   const related = actor.membership?.organisationId === organisationId || hasPlatform(actor, "platform.view_all");
   if (!related) throw new NotFoundError("Not found");
   throw new ForbiddenError("Your role does not allow this action");

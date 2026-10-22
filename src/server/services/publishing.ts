@@ -29,6 +29,7 @@ import { formatINR } from "@/lib/money";
 import { todayIST } from "@/lib/format";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../errors";
 import { enqueue } from "../jobs/queue";
+import { processQueueSoon } from "../jobs/kick";
 import { effectiveMode } from "../providers/modes";
 import { adapterFor } from "../providers/registry";
 import { ProviderError, type PublishSpec, type Refs, type StatusResult } from "../providers/types";
@@ -133,6 +134,7 @@ export async function requestPublish(db: Database, actor: Actor, campaignId: str
       data: { approvalId: approval.id, configHash: approval.configHash },
     });
   });
+  processQueueSoon();
 }
 
 /** Re-queue a platform whose publication failed, under the same approval. */
@@ -150,6 +152,7 @@ export async function retryPlatform(db: Database, actor: Actor, platformId: stri
     await recomputeCampaignStatus(tx, full.campaign.id);
     await audit(tx, actor, { action: "campaign.publish_retry", entityType: "campaign", entityId: full.campaign.id, organisationId: full.campaign.organisationId, summary: `Retry publishing to ${platform.provider}` });
   });
+  processQueueSoon();
 }
 
 // ------------------------------------------------------------------ execute (worker)

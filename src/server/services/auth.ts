@@ -10,6 +10,7 @@ import { ForbiddenError, UnauthenticatedError, ValidationError } from "../errors
 import { isEnabled } from "../flags";
 import { rateLimit } from "../rate-limit";
 import { email, optionalIndianPhone, parse, password, requiredText } from "../validation";
+import * as mfa from "./mfa";
 
 export const SESSION_TTL_HOURS = 12;
 const VERIFY_TTL_HOURS = 48;
@@ -40,7 +41,7 @@ export async function register(db: Database, input: unknown, ip: string | null) 
       .insert(users)
       .values({ email: data.email, name: data.name, phone: data.phone ?? null, passwordHash })
       .returning();
-    await audit(tx, { user: { ...user, platformRole: null, emailVerified: false }, membership: null, ip }, {
+    await audit(tx, { user: { ...user, platformRole: null, emailVerified: false }, membership: null, mfaVerified: false, ip }, {
       action: "user.registered",
       entityType: "user",
       entityId: user.id,
@@ -107,21 +108,38 @@ export async function login(db: Database, rawEmail: string, rawPassword: string,
     throw new UnauthenticatedError("Incorrect email or password");
   }
   if (user.status !== "active") throw new ForbiddenError("This account is suspended. Contact AutoSutra support.");
-  const firstMembership = await db.query.organisationMemberships.findFirst({ where: eq(organisationMemberships.userId, user.id) });
-  const token = randomToken();
-  await db.transaction(async (tx) => {
-    await tx.insert(sessions).values({
-      tokenHash: hashToken(token),
-      userId: user.id,
-      activeOrganisationId: firstMembership?.organisationId ?? null,
-      expiresAt: new Date(Date.now() + SESSION_TTL_HOURS * 3600_000),
-      ip,
-      userAgent: userAgent?.slice(0, 300) ?? null,
-    });
-    await tx.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
+  if (user.totpEnabledAt) {
+    const challengeToken = await mfa.createChallenge(db, user, ip, userAgent);
+    await audit(db, null, { action: "auth.password_accepted", entityType: "user", entityId: user.id, summary: `Password accepted for ${user.email}; waiting for the two-step code`, data: { ip } });
+    return { kind: "two_step" as const, challengeToken, user };
+  }
+  const token = await db.transaction(async (tx) => {
+    const t = await createSession(tx, user, { mfaVerified: false, ip, userAgent });
     await audit(tx, null, { action: "auth.login", entityType: "user", entityId: user.id, summary: `Signed in ${user.email}`, data: { ip } });
+    return t;
   });
-  return { token, user };
+  return { kind: "session" as const, token, user };
+}
+
+/** Second step of sign-in for users with two-step verification on. */
+export async function completeTwoStepLogin(db: Database, challengeToken: string | undefined | null, code: string, ip: string | null, userAgent: string | null) {
+  return mfa.completeChallenge(db, challengeToken, String(code ?? ""), createSession, ip, userAgent);
+}
+
+async function createSession(tx: DbOrTx, user: typeof users.$inferSelect, opts: { mfaVerified: boolean; ip: string | null; userAgent: string | null }): Promise<string> {
+  const firstMembership = await tx.query.organisationMemberships.findFirst({ where: eq(organisationMemberships.userId, user.id) });
+  const token = randomToken();
+  await tx.insert(sessions).values({
+    tokenHash: hashToken(token),
+    userId: user.id,
+    activeOrganisationId: firstMembership?.organisationId ?? null,
+    expiresAt: new Date(Date.now() + SESSION_TTL_HOURS * 3600_000),
+    ip: opts.ip,
+    userAgent: opts.userAgent?.slice(0, 300) ?? null,
+    mfaVerifiedAt: opts.mfaVerified ? new Date() : null,
+  });
+  await tx.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
+  return token;
 }
 
 export async function sessionFromToken(db: DbOrTx, token: string | undefined | null) {

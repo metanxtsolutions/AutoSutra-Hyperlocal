@@ -56,7 +56,7 @@ export async function listUsers(db: DbOrTx, actor: Actor, q?: string) {
   requirePlatform(actor, "platform.view_all");
   return db
     .select({
-      user: { id: users.id, name: users.name, email: users.email, status: users.status, platformRole: users.platformRole, emailVerifiedAt: users.emailVerifiedAt, lastLoginAt: users.lastLoginAt, createdAt: users.createdAt },
+      user: { id: users.id, name: users.name, email: users.email, status: users.status, platformRole: users.platformRole, emailVerifiedAt: users.emailVerifiedAt, totpEnabledAt: users.totpEnabledAt, lastLoginAt: users.lastLoginAt, createdAt: users.createdAt },
       orgs: sql<string[]>`coalesce((select array_agg(o.name) from ${organisationMemberships} m join ${organisations} o on o.id = m.organisation_id where m.user_id = ${users.id}), '{}')`,
     })
     .from(users)

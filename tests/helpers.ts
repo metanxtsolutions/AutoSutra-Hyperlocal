@@ -42,8 +42,9 @@ export async function addMember(orgId: string, userId: string, role: OrgRole, al
   return m;
 }
 
-export async function actorFor(userId: string, orgId: string | null = null): Promise<Actor> {
-  const a = await loadActor(getDb(), userId, orgId, "127.0.0.1");
+/** Actor for a session that passed two-step verification unless `mfaVerified: false`. */
+export async function actorFor(userId: string, orgId: string | null = null, opts: { mfaVerified?: boolean } = {}): Promise<Actor> {
+  const a = await loadActor(getDb(), userId, orgId, "127.0.0.1", { mfaVerified: opts.mfaVerified ?? true });
   if (!a) throw new Error("no actor");
   return a;
 }

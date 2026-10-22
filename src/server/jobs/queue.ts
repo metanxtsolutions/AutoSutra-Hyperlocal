@@ -15,6 +15,9 @@ import { ProviderError } from "../providers/types";
 
 export type Job = typeof jobs.$inferSelect;
 
+/** Throw from a handler when retrying cannot help (for example a rejected email address). */
+export class PermanentJobError extends Error {}
+
 export async function enqueue(
   db: DbOrTx,
   type: string,
@@ -52,7 +55,7 @@ export async function complete(db: DbOrTx, job: Job) {
 
 export async function fail(db: DbOrTx, job: Job, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  const retryable = !(error instanceof ProviderError) || error.retryable;
+  const retryable = !(error instanceof PermanentJobError) && (!(error instanceof ProviderError) || error.retryable);
   const dead = !retryable || job.attempts >= job.maxAttempts;
   await db
     .update(jobs)

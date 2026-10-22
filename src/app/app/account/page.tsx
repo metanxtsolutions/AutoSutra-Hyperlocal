@@ -4,11 +4,15 @@ import { Card, CardHeader, DescriptionList, PageHeader } from "@/components/ui/c
 import { TextField } from "@/components/ui/fields";
 import { requireActor } from "@/server/auth/session";
 import { changePasswordAction } from "./actions";
+import Link from "next/link";
+import { getDb } from "@/server/db/client";
+import { twoStepStatus } from "@/server/services/mfa";
 
 export const metadata: Metadata = { title: "Account" };
 
 export default async function AccountPage() {
   const actor = await requireActor();
+  const twoStep = await twoStepStatus(getDb(), actor.user.id);
   return (
     <>
       <PageHeader title="Your account" />
@@ -22,6 +26,10 @@ export default async function AccountPage() {
               { label: "Organisation", value: actor.membership?.organisationName ?? "–" },
             ]}
           />
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-lg bg-ink-50 px-3 py-2 text-sm">
+            <span>Two-step verification: <strong>{twoStep.enabled ? "On" : "Off"}</strong></span>
+            <Link href="/app/account/security" className="font-semibold text-road-600 hover:underline">{twoStep.enabled ? "Manage" : "Set up"}</Link>
+          </div>
           <p className="mt-4 text-xs text-ink-500">To export or delete your personal data, raise a request from Support. Requests are handled as described in the privacy policy.</p>
         </Card>
         <Card>

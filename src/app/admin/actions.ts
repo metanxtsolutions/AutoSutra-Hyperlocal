@@ -12,6 +12,7 @@ import * as wallet from "@/server/services/wallet";
 import * as recon from "@/server/services/reconciliation";
 import * as billing from "@/server/services/billing";
 import * as support from "@/server/services/support";
+import * as mfa from "@/server/services/mfa";
 import { checkConnection } from "@/server/services/connections";
 import { ValidationError } from "@/server/errors";
 import type { PlatformRole } from "@/server/auth/permissions";
@@ -57,6 +58,13 @@ export async function userStatusAction(userId: string, status: "active" | "suspe
   return runAction(fd, async () => {
     await admin.setUserStatus(getDb(), await requireActor(), userId, status, s(fd, "reason"));
     return "Saved";
+  });
+}
+
+export async function resetTwoStepAction(userId: string, _: ActionState, fd: FormData): Promise<ActionState> {
+  return runAction(fd, async () => {
+    await mfa.adminResetTwoStep(getDb(), await requireActor(), userId, s(fd, "reason"));
+    return "Two-step verification reset. The user has been signed out everywhere.";
   });
 }
 

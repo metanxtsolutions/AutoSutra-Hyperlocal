@@ -10,7 +10,7 @@ import { ROLE_LABELS } from "@/server/auth/permissions";
 import { requireActor } from "@/server/auth/session";
 import { getDb } from "@/server/db/client";
 import { listUsers } from "@/server/services/admin";
-import { platformRoleAction, userStatusAction } from "../actions";
+import { platformRoleAction, resetTwoStepAction, userStatusAction } from "../actions";
 
 export const metadata: Metadata = { title: "Users" };
 
@@ -24,13 +24,14 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
       <PageHeader title="Users and permissions" description="Customer roles are managed by each organisation. Staff roles grant cross-organisation access and are changed only by a super admin." />
       <form method="get" className="mb-4"><input name="q" defaultValue={q} placeholder="Search name or email" className="h-9 w-72 rounded-md border border-ink-200 px-2 text-sm" /></form>
       <Table>
-        <THead><tr><Th>User</Th><Th>Organisations</Th><Th>Staff role</Th><Th>Status</Th><Th>Last login</Th><Th></Th></tr></THead>
+        <THead><tr><Th>User</Th><Th>Organisations</Th><Th>Staff role</Th><Th>Two-step</Th><Th>Status</Th><Th>Last login</Th><Th></Th></tr></THead>
         <TBody>
           {rows.map(({ user: u, orgs }) => (
             <tr key={u.id}>
               <Td><div className="font-medium">{u.name}</div><div className="text-xs text-ink-500">{u.email}{u.emailVerifiedAt ? "" : " (unverified)"}</div></Td>
               <Td className="text-xs">{orgs.join(", ") || "–"}</Td>
               <Td>{u.platformRole ? <Badge tone="brand">{ROLE_LABELS[u.platformRole]}</Badge> : "–"}</Td>
+              <Td>{u.totpEnabledAt ? <Badge tone="ok">On</Badge> : <Badge tone={u.platformRole ? "warn" : "neutral"}>Off</Badge>}</Td>
               <Td><StatusBadge status={u.status} /></Td>
               <Td className="text-xs">{formatDateTime(u.lastLoginAt)}</Td>
               <Td className="text-right">
@@ -42,6 +43,15 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                         <SubmitButton variant={u.status === "active" ? "danger" : "primary"}>Confirm</SubmitButton>
                       </ActionForm>
                     </Modal>
+                    {superAdmin && u.totpEnabledAt && (
+                      <Modal trigger="Reset two-step" title={`Reset two-step verification for ${u.email}`} triggerVariant="ghost">
+                        <ActionForm action={resetTwoStepAction.bind(null, u.id)}>
+                          <p className="text-sm text-ink-700">Only do this after confirming the person&apos;s identity through a separate channel. They will be signed out and must set up two-step verification again.</p>
+                          <TextField label="Reason and how identity was confirmed" name="reason" required />
+                          <SubmitButton variant="danger">Reset</SubmitButton>
+                        </ActionForm>
+                      </Modal>
+                    )}
                     {superAdmin && (
                       <Modal trigger="Staff role" title={`Staff role for ${u.email}`} triggerVariant="ghost">
                         <ActionForm action={platformRoleAction.bind(null, u.id)}>

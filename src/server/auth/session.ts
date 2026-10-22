@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "../db/client";
 import { getEnv } from "../env";
 import { sessionFromToken, SESSION_TTL_HOURS } from "../services/auth";
+import { CHALLENGE_TTL_MINUTES } from "../services/mfa";
 import { loadActor, type Actor } from "./context";
 
 export const SESSION_COOKIE = "as_session";
@@ -29,6 +30,27 @@ export async function clearSessionCookie() {
   (await cookies()).delete(SESSION_COOKIE);
 }
 
+/** Holds the pending sign-in between the password and the two-step code. */
+const TWO_STEP_COOKIE = "as_two_step";
+
+export async function setTwoStepCookie(token: string) {
+  (await cookies()).set(TWO_STEP_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: getEnv().APP_URL.startsWith("https://"),
+    path: "/",
+    maxAge: CHALLENGE_TTL_MINUTES * 60,
+  });
+}
+
+export async function twoStepToken(): Promise<string | undefined> {
+  return (await cookies()).get(TWO_STEP_COOKIE)?.value;
+}
+
+export async function clearTwoStepCookie() {
+  (await cookies()).delete(TWO_STEP_COOKIE);
+}
+
 export async function sessionToken(): Promise<string | undefined> {
   return (await cookies()).get(SESSION_COOKIE)?.value;
 }
@@ -39,7 +61,7 @@ export const currentSession = cache(async () => {
   const db = getDb();
   const session = await sessionFromToken(db, token);
   if (!session) return null;
-  const actor = await loadActor(db, session.userId, session.activeOrganisationId, await clientIp());
+  const actor = await loadActor(db, session.userId, session.activeOrganisationId, await clientIp(), { mfaVerified: !!session.mfaVerifiedAt });
   if (!actor) return null;
   return { session, actor };
 });

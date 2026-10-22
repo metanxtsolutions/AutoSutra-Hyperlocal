@@ -9,6 +9,8 @@ export interface ActionState {
   fieldErrors?: Record<string, string>;
   /** Echo of submitted values so forms keep user input after a validation error. */
   values?: Record<string, string>;
+  /** Extra result for the page to show once (for example new recovery codes). */
+  data?: Record<string, unknown>;
 }
 
 export const initialActionState: ActionState = {};

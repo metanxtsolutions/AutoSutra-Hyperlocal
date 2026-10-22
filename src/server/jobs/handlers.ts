@@ -5,6 +5,7 @@ import { runReconciliation } from "../services/reconciliation";
 import { expireStaleDeposits } from "../services/wallet";
 import { runAutomationScan } from "../services/automation";
 import { syncMetaLeads } from "../services/lead-sync";
+import { deliverEmail } from "../email";
 
 /** Every background job type and the function that runs it. */
 export const handlers: Record<string, Handler> = {
@@ -30,6 +31,9 @@ export const handlers: Record<string, Handler> = {
   },
   meta_lead_sync: async (db) => {
     await syncMetaLeads(db);
+  },
+  send_email: async (db, job) => {
+    await deliverEmail(db, (job.payload as { emailId: string }).emailId, { finalAttempt: job.attempts >= job.maxAttempts });
   },
 };
 
