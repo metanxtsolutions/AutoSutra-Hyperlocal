@@ -2,7 +2,7 @@
 
 import { createContext, useActionState, useContext, useEffect, useRef, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ActionState } from "@/server/actions";
 import { buttonClass } from "./button";
 import { cn } from "@/lib/cn";
@@ -34,24 +34,29 @@ export function ActionForm({
   const [state, formAction] = useActionState(action, {});
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   useEffect(() => {
-    if (state.ok) {
-      if (resetOnSuccess) formRef.current?.reset();
-      if (successRedirect) router.push(successRedirect);
-      else router.refresh();
+    if (!state.ok) return;
+    if (resetOnSuccess) formRef.current?.reset();
+    if (successRedirect) {
+      router.push(successRedirect);
+    } else if (showSuccess && state.message) {
+      // The toast survives the refresh even when this form unmounts (e.g. a status change hides it).
+      // Read the query string directly: useSearchParams would force static pages to suspend.
+      const next = new URLSearchParams(window.location.search);
+      next.set("notice", state.message);
+      router.replace(`${pathname}?${next}`, { scroll: false });
+    } else {
+      router.refresh();
     }
-  }, [state, resetOnSuccess, successRedirect, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
   return (
     <FormStateContext.Provider value={state}>
       <form ref={formRef} action={formAction} className={cn("space-y-4", className)} noValidate>
         {state.error && (
           <div role="alert" className="rounded-lg border border-bad-100 bg-bad-100/60 px-4 py-3 text-sm text-bad-700">
             {state.error}
-          </div>
-        )}
-        {state.ok && showSuccess && state.message && (
-          <div role="status" className="rounded-lg border border-ok-100 bg-ok-100/60 px-4 py-3 text-sm text-ok-700">
-            {state.message}
           </div>
         )}
         {children}

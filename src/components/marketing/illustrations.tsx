@@ -70,8 +70,9 @@ export function DashboardPreview({ className }: { className?: string }) {
           <rect x="446" y={y - 4} width="86" height="8" rx="4" fill="#d7deea" />
         </g>
       ))}
-      <text x="140" y="300" fontFamily="system-ui, sans-serif" fontSize="11" fill="#5b6f93">
-        Layout preview. Your dashboard shows only data reported by your connected ad accounts and your own lead records.
+      <text x="140" y="296" fontFamily="system-ui, sans-serif" fontSize="11" fill="#5b6f93">
+        <tspan x="140">Layout preview. Your dashboard shows only data reported by your</tspan>
+        <tspan x="140" dy="15">connected ad accounts and your own lead records.</tspan>
       </text>
     </svg>
   );

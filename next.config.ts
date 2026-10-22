@@ -27,6 +27,8 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // A separate build directory lets end-to-end tests run beside a normal build or dev server.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   serverExternalPackages: ["pg"],
   experimental: { serverActions: { bodySizeLimit: "26mb" } },

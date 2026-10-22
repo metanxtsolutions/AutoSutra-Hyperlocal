@@ -43,6 +43,8 @@
   body { @apply bg-ink-50 text-ink-900 antialiased; }
   :focus-visible { @apply outline-2 outline-offset-2 outline-road-500; }
   h1, h2, h3 { @apply text-ink-950; }
+  /* Grid and flex children may shrink below their content, so wide tables scroll inside their own wrapper. */
+  .grid > *, .flex > * { min-width: 0; }
 }
 
 .leaflet-container { font: inherit; }

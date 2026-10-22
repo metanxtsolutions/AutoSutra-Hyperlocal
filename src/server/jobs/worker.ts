@@ -3,6 +3,7 @@
  * Processes queued jobs and schedules periodic work. On serverless hosting,
  * /api/cron/run-jobs does the same work in short bursts instead.
  */
+import "../load-env";
 import { closeDb, getDb } from "../db/client";
 import { runScheduled, runAllHandlers } from "./run";
 

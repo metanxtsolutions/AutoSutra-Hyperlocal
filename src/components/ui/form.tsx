@@ -25,7 +25,7 @@ export function Field({
     <div className={cn("space-y-1", className)}>
       <label htmlFor={name} className="block text-sm font-medium text-ink-800">
         {label}
-        {required && <span className="text-bad-700"> *</span>}
+        {required && <span aria-hidden className="text-bad-700"> *</span>}
       </label>
       {children}
       {hint && !error && <p className="text-xs text-ink-500">{hint}</p>}

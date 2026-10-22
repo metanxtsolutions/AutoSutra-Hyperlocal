@@ -47,7 +47,7 @@ export function AppShell({
   );
   return (
     <div className="min-h-screen lg:flex">
-      <aside className="hidden w-64 flex-none flex-col bg-ink-900 lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto">{sidebar}</aside>
+      <aside className="hidden w-64 flex-none flex-col bg-ink-900 lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto [&>*]:shrink-0">{sidebar}</aside>
       <details className="group bg-ink-900 lg:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-white marker:hidden">
           <span className="font-semibold">AutoSutra</span>

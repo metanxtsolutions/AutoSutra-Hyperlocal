@@ -1,3 +1,4 @@
+import "../src/server/load-env";
 /**
  * Development seed. Creates a platform super admin and a demo dealer group.
  * Refuses to run in production.
