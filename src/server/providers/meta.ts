@@ -279,7 +279,34 @@ export class MetaAdapter implements AdsAdapter {
 
 // ------------------------------------------------------------------ OAuth and account discovery
 
-export const META_SCOPES = ["ads_management", "ads_read", "business_management", "pages_show_list", "pages_read_engagement", "pages_manage_ads"];
+export const META_SCOPES = ["ads_management", "ads_read", "business_management", "pages_show_list", "pages_read_engagement", "pages_manage_ads", "leads_retrieval"];
+
+export interface MetaLead {
+  id: string;
+  createdTime: string;
+  fields: Record<string, string>;
+}
+
+/** Instant-form leads created after `sinceUnix` (needs leads_retrieval and a Page access the user can manage). */
+export async function metaFetchLeads(client: MetaClient, formId: string, sinceUnix: number): Promise<MetaLead[]> {
+  const out: MetaLead[] = [];
+  let after: string | undefined;
+  for (let page = 0; page < 20; page++) {
+    const res = await client.call("GET", `${formId}/leads`, {
+      fields: "id,created_time,field_data",
+      filtering: [{ field: "time_created", operator: "GREATER_THAN", value: sinceUnix }],
+      limit: 100,
+      after,
+    });
+    for (const l of (res.data as { id: string; created_time: string; field_data?: { name: string; values: string[] }[] }[] | undefined) ?? []) {
+      out.push({ id: String(l.id), createdTime: l.created_time, fields: Object.fromEntries((l.field_data ?? []).map((f) => [f.name, f.values?.[0] ?? ""])) });
+    }
+    const paging = res.paging as { next?: string; cursors?: { after?: string } } | undefined;
+    after = paging?.next ? paging.cursors?.after : undefined;
+    if (!after) break;
+  }
+  return out;
+}
 
 export function metaAuthUrl(opts: { appId: string; redirectUri: string; state: string; version: string }): string {
   const q = new URLSearchParams({ client_id: opts.appId, redirect_uri: opts.redirectUri, state: opts.state, scope: META_SCOPES.join(","), response_type: "code" });

@@ -3,6 +3,8 @@ import { executePublish, scheduleSyncAll, syncPlatform } from "../services/publi
 import { runBillingCycle } from "../services/billing";
 import { runReconciliation } from "../services/reconciliation";
 import { expireStaleDeposits } from "../services/wallet";
+import { runAutomationScan } from "../services/automation";
+import { syncMetaLeads } from "../services/lead-sync";
 
 /** Every background job type and the function that runs it. */
 export const handlers: Record<string, Handler> = {
@@ -22,6 +24,12 @@ export const handlers: Record<string, Handler> = {
   },
   billing_cycle: async (db) => {
     await runBillingCycle(db);
+  },
+  automation_scan: async (db) => {
+    await runAutomationScan(db);
+  },
+  meta_lead_sync: async (db) => {
+    await syncMetaLeads(db);
   },
 };
 

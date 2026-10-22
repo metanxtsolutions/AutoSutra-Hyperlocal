@@ -17,6 +17,7 @@ export async function runScheduled(db: Database) {
   const hour = Math.floor(now / 3_600_000);
   const day = new Date(now + 5.5 * 3_600_000).toISOString().slice(0, 10);
   await enqueue(db, "schedule_sync", {}, { idempotencyKey: `schedule_sync:${quarter}` });
+  await enqueue(db, "meta_lead_sync", {}, { idempotencyKey: `meta_lead_sync:${quarter}` });
   if ("automation_scan" in handlers) await enqueue(db, "automation_scan", {}, { idempotencyKey: `automation:${hour}` });
   if ("reconcile" in handlers) await enqueue(db, "reconcile", {}, { idempotencyKey: `reconcile:${day}` });
   if ("billing_cycle" in handlers) await enqueue(db, "billing_cycle", {}, { idempotencyKey: `billing:${day}` });
