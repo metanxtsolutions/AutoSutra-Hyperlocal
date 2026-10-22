@@ -6,8 +6,10 @@ This is the honest status of the release. Nothing below should be described to c
 
 | Area | Tested how | Not tested |
 |---|---|---|
-| Auth, tenancy, roles, dealerships, locations, campaigns, approvals, leads, reports, ledger, wallet, refunds, reconciliation, billing | 61 Vitest service tests against a real PostgreSQL 16 database, including concurrency and database-trigger tests | Load and performance |
-| Full campaign flow in a browser | Playwright: register, verify email, organisation, dealership, location, all builder steps, submit, approve, publish (demo), job run, demo status, audit trail, mobile layout at 375px | Other browsers than Chromium; screen readers |
+| Auth, two-step verification, tenancy, roles, dealerships, locations, campaigns, approvals, leads, reports, ledger, wallet, refunds, reconciliation, billing, storage | 77 Vitest service tests against a real PostgreSQL 16 database, including concurrency, database-trigger and RFC 6238 test-vector tests | Load and performance |
+| Email | SMTP delivery through the job queue tested against a local SMTP server (delivery, retries, permanent rejection, rollback) | **Never sent through a real provider** |
+| Full campaign flow in a browser | Playwright (5 tests): register, verify email, organisation, dealership, location, all builder steps, submit, approve, publish (demo), job run, demo status, audit trail, mobile layout at 375px; two-step set-up and sign-in with a code and a recovery code; install manifest, offline page, asset links | Other browsers than Chromium; screen readers |
+| Android app | Built by GitHub Actions (`android-preview.yml`) | Installed and opened on a real phone |
 | Meta and Google adapters | Unit tests against **mocked HTTP responses** (publish, retry after partial failure, error classification, pause, metrics) | **Never called the real Meta or Google APIs** |
 | Payment gateway | Mock gateway with HMAC-signed webhooks through the real verification path | **Razorpay adapter never called against Razorpay** (test or live) |
 | Storage | Local driver | **S3 driver never run against a real bucket** |
@@ -21,7 +23,7 @@ This is the honest status of the release. Nothing below should be described to c
 | Google Ads developer token Basic access, OAuth consent screen verification for the `adwords` scope | Live Google publishing | AutoSutra | **Apply now** |
 | Legal opinion on holding and allocating customer ad budgets; gateway approval; platform billing terms; GST advice | Central wallet and live deposits | AutoSutra with counsel and tax adviser | Dealer-funded mode works without these |
 | Razorpay (or other gateway) account, KYC, webhook set-up; test-mode verification | Subscription and invoice payments online; deposits | AutoSutra | Invoices can be settled offline meanwhile |
-| Transactional email provider and a driver in `src/server/email.ts` | Email verification, password reset, invitations in production | Engineering | Only the database outbox exists |
+| Transactional email provider account with SMTP and a verified sending domain | Email verification, password reset, invitations in production | AutoSutra | The SMTP driver exists; configure and test it on staging |
 | S3-compatible bucket | Creative uploads in production | Engineering / ops | Production refuses to start with local storage |
 | Commercial map tile provider | Maps in production | AutoSutra | OpenStreetMap public tiles are not for production use; add the host to the CSP |
 | Counsel review of privacy policy, terms, cookie notice, DPA, consent wording | Launch | AutoSutra | Current texts are drafts |
@@ -39,13 +41,13 @@ This is the honest status of the release. Nothing below should be described to c
 
 ## Product gaps
 
-- No multi-factor authentication. Required before enabling the central wallet.
+- Two-step verification uses authenticator apps only (no SMS or passkeys). It is optional for customer owners and admins.
 - No self-service account deletion; staff suspend users and remove memberships.
 - Anonymising a lead clears the lead record and consent IP but not previously written activity notes (they are append-only).
 - No recurring payment mandate (e-mandate / UPI AutoPay) for subscriptions; invoices are paid one at a time. No proration on plan changes (upgrades are invoiced for a full period, downgrades apply at renewal).
 - Inventory is entered manually; no DMS or stock-feed integration.
 - No server-side geocoding; staff place map pins themselves.
-- The weekly performance summary is an in-app notification only, because email delivery is not wired up.
+- The weekly performance summary is an in-app notification only (not emailed yet).
 - English only.
 - Rotating `TOKEN_ENCRYPTION_KEY` in place is not supported (customers would need to reconnect).
 
@@ -55,4 +57,6 @@ This is the honest status of the release. Nothing below should be described to c
 - scrypt cost below OWASP's current recommendation; raise after measuring production latency.
 - Catchment overlap uses a bounding-box prefilter and haversine distance, not PostGIS. Adequate for thousands of locations.
 - Rate limiting and the job queue use PostgreSQL. Adequate for early scale; revisit at high request volumes.
+- The shipped `vercel.json` cron runs daily (Vercel Hobby limit). Live advertising needs the 5-minute schedule on a paid plan, the worker, or an external scheduler; see DEPLOYMENT.md.
+- The Android app is a Trusted Web Activity around the website. Without a stored signing key each build has a new signature, and it needs Chrome (or another browser supporting Trusted Web Activities) on the phone.
 - Dependabot, secret scanning and CI workflows are not configured in the repository.

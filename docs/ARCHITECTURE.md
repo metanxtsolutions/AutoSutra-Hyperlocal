@@ -56,7 +56,7 @@ Idempotency: each external object id is written to `campaign_platforms.external_
 
 ## Background jobs
 
-`jobs` table, claimed with `FOR UPDATE SKIP LOCKED`, exponential backoff, stale-lock recovery and idempotency keys. Types: `publish_platform`, `sync_platform`, `schedule_sync`, `meta_lead_sync`, `reconcile`, `billing_cycle`, `automation_scan`. They run either in the long-running worker (`npm run worker`) or in bursts from Vercel Cron (`/api/cron/run-jobs`). Postgres was chosen over Redis to avoid an extra service at this stage; the queue interface is small enough to swap later.
+`jobs` table, claimed with `FOR UPDATE SKIP LOCKED`, exponential backoff, stale-lock recovery and idempotency keys. Types: `publish_platform`, `sync_platform`, `schedule_sync`, `meta_lead_sync`, `send_email`, `reconcile`, `billing_cycle`, `automation_scan`. They run right after the request that queued them (`processQueueSoon`, using Next.js `after`), in the long-running worker (`npm run worker`) and in bursts from Vercel Cron (`/api/cron/run-jobs`). Handlers that cannot succeed on retry throw `PermanentJobError`. Postgres was chosen over Redis to avoid an extra service at this stage; the queue interface is small enough to swap later.
 
 ## Money
 
@@ -66,7 +66,7 @@ See [FUNDING_MODEL.md](FUNDING_MODEL.md). In short: integer paise everywhere, a 
 
 | Area | Tables |
 |---|---|
-| Identity | users, sessions, email_tokens, rate_limits, outbound_emails |
+| Identity | users, sessions, mfa_challenges, mfa_recovery_codes, email_tokens, rate_limits, outbound_emails |
 | Tenancy | organisations, organisation_memberships, membership_locations, invitations |
 | Dealerships | dealerships, dealership_locations, inventory_items |
 | Providers | advertising_connections, provider_accounts, oauth_states |
@@ -74,7 +74,7 @@ See [FUNDING_MODEL.md](FUNDING_MODEL.md). In short: integer paise everywhere, a 
 | Leads | leads, lead_activities, consent_records |
 | Billing | subscription_plans, subscriptions, invoices, invoice_lines |
 | Funds | payments, payment_webhook_events, advertising_deposits, refunds, ledger_accounts, ledger_entries, ledger_lines, budget_reservations, provider_spend_records, reconciliation_runs, reconciliation_differences |
-| Operations | notifications, support_tickets, support_ticket_messages, audit_logs, feature_flags, system_settings, contact_requests, jobs |
+| Operations | notifications, support_tickets, support_ticket_messages, audit_logs, feature_flags, system_settings, contact_requests, jobs, stored_objects |
 
 Append-only (database triggers): audit_logs, ledger_entries, ledger_lines, campaign_approvals, payment_webhook_events, lead_activities, provider_spend_records.
 

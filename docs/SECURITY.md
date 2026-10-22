@@ -5,8 +5,9 @@
 | Area | Control | Where |
 |---|---|---|
 | Passwords | scrypt (N=2^15, r=8, p=1, per-user salt), minimum 10 characters, constant-time comparison, dummy hash for unknown emails to equalise timing | `src/server/crypto.ts`, `services/auth.ts` |
+| Two-step verification | Authenticator-app codes (RFC 6238) with replay protection and one step of clock drift; 10 single-use recovery codes stored as keyed hashes; sign-in challenge expires after 10 minutes and ends after 5 wrong codes; required for all AutoSutra staff tools (including staff access to customer data) and for wallet deposits and refund requests; super admin reset needs a recorded reason and signs the user out everywhere | `services/mfa.ts`, `totp.ts`, `auth/context.ts` |
 | Sessions | 256-bit random token in an httpOnly, SameSite=Lax cookie, Secure whenever `APP_URL` is https; only an HMAC of the token is stored; 12-hour lifetime; all sessions revoked on password reset, suspension or staff role change | `auth/session.ts` |
-| Email tokens | Single use, hashed at rest, short expiry (verification 48 h, password reset 60 min), purpose-bound | `services/auth.ts` |
+| Email tokens | Single use, hashed at rest, short expiry (verification 48 h, password reset 60 min), purpose-bound; email bodies (which contain the links) are removed after SMTP delivery, and only shown to staff outside production | `services/auth.ts`, `email.ts` |
 | Rate limiting | Postgres sliding window on login (IP and email), registration, password reset, verification resend, public enquiry and contact forms, organisation creation and invitations | `rate-limit.ts` |
 | Authorisation | Every service checks permissions server-side from the session; tenant and location scoping on every query; cross-tenant ids return Not found; staff powers limited and audited | `auth/context.ts`, `auth/permissions.ts` |
 | CSRF | Server actions verify the Origin header (Next.js); cookies are SameSite=Lax; OAuth uses a hashed, single-use `state` that expires after 10 minutes and is bound to the user and organisation | |
@@ -24,12 +25,13 @@
 ## Known gaps and hardening backlog
 
 - **CSP uses `'unsafe-inline'` for scripts** because Next.js injects inline bootstrap scripts. Move to nonce-based CSP via middleware before handling payments at scale.
-- **No multi-factor authentication** yet. Add TOTP for owners, finance users and all AutoSutra staff before enabling the central wallet.
+- Two-step verification is optional for customer owners and admins (required only for money movements). Consider requiring it for owners and finance users before enabling the central wallet.
 - scrypt cost is below OWASP's current recommendation for interactive logins (N=2^17); raise it once login latency on production hardware is measured. Hashes record their parameters, so existing hashes keep working.
 - No malware scanning of uploads (images are sniffed by magic bytes and re-served with their verified content type; add a scanner if video or document uploads are opened up).
 - No automated dependency or secret scanning configured in CI (enable GitHub Dependabot and secret scanning).
 - Session list and "sign out other devices" UI not built (sessions are revoked on password reset).
 - Penetration test not yet performed.
+- `npm audit` reports advisories in build and test tooling only (PostCSS bundled inside Next.js, Vitest, ESLint); none are in code that handles requests. Re-check at each dependency update.
 
 ## Pre-launch security checklist
 
@@ -37,7 +39,7 @@
 - [ ] `TOKEN_ENCRYPTION_KEY` backed up securely (losing it means every customer must reconnect Meta and Google).
 - [ ] Database not publicly reachable, TLS enforced, least-privilege application role.
 - [ ] Storage bucket private; no public ACLs.
-- [ ] Super admin accounts limited to named people; MFA on hosting, database, GitHub, Meta Business Manager, Google Ads manager account and payment gateway dashboards.
+- [ ] Super admin accounts limited to named people, each with two-step verification set up in AutoSutra; MFA on hosting, database, GitHub, Meta Business Manager, Google Ads manager account and payment gateway dashboards.
 - [ ] Error monitoring configured with PII scrubbing.
 - [ ] Webhook secret configured in the gateway and verified with a test event on staging.
 - [ ] Dependabot and secret scanning on.

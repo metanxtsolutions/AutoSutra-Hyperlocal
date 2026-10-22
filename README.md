@@ -10,7 +10,7 @@ Automotive hyperlocal advertising management for India: dealerships and dealer g
 | Area | Highlights |
 |---|---|
 | Public website | Home (13 sections), features, how it works, automotive solutions, dealer groups, managed advertising, pricing (from the database), contact, privacy, terms, cookies |
-| Accounts | Email/password with scrypt, email verification, password reset, rate limiting, hashed session tokens, invitations |
+| Accounts | Email/password with scrypt, email verification, password reset, rate limiting, hashed session tokens, invitations, two-step verification (authenticator app and recovery codes; required for staff and money movements), SMTP email delivery |
 | Tenancy and roles | Organisations (independent dealer, dealer group, agency), 7 organisation roles and 3 AutoSutra staff roles, location-limited access, server-side enforcement on every query |
 | Dealerships and locations | Brands, category, type, GSTIN, verification; locations with map pin, radius, permitted / excluded PIN codes, supported objectives, monthly budget limit, lead routing; territory overlap warnings with audited override |
 | Campaign builder | 9 steps: location, objective (17 automotive objectives mapped to real provider campaign types), product and claims, platforms, targeting, audience, budget per platform and location, creative with uploads and previews, review |
@@ -19,7 +19,8 @@ Automotive hyperlocal advertising management for India: dealerships and dealer g
 | Money | Double-entry append-only ledger, dealer-funded default, central wallet behind a flag, verified webhooks, refunds with finance approval, reconciliation with two-person adjustments, subscriptions and GST invoices |
 | Leads | Hosted enquiry and test-drive forms, Meta instant-form sync, CSV import with consent evidence, duplicates, routing, status history, response time, consent withdrawal, anonymisation, retention, audited export |
 | Reporting | Provider-separated metrics with attribution notes, captured-to-sold funnel, cost per enquiry and test drive, location and platform views, freshness warnings, CSV export |
-| Operations | Admin console: organisations, users, campaign ops, connections, jobs and API health, ledger, payments, refunds, reconciliation, plans, feature flags, support, audit |
+| Operations | Admin console: organisations, users, campaign ops, connections, jobs and API health, emails, ledger, payments, refunds, reconciliation, plans, feature flags, support, audit |
+| Phone | Installable web app (manifest, icons, offline page) and an Android app (Trusted Web Activity) built by GitHub Actions; see [docs/PHONE_PREVIEW.md](docs/PHONE_PREVIEW.md) |
 
 ## Stack
 
@@ -79,6 +80,7 @@ Service tests rebuild the `autosutra_test` schema from migrations on every run. 
 | [PROVIDER_SETUP.md](docs/PROVIDER_SETUP.md) | Meta and Google Ads API access, app review, OAuth, going live |
 | [FUNDING_MODEL.md](docs/FUNDING_MODEL.md) | Dealer-funded vs central wallet, ledger accounts, approvals needed before enabling |
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Vercel + managed Postgres + worker, environments, cron, email, storage |
+| [PHONE_PREVIEW.md](docs/PHONE_PREVIEW.md) | Hosted demo on a phone: install from the browser or the Android APK |
 | [SECURITY.md](docs/SECURITY.md) | Security controls, compliance checklist, incident response |
 | [COMPLIANCE.md](docs/COMPLIANCE.md) | DPDP Act notes, consent, data subject requests, subprocessors, DPA template |
 | [BACKUP_RECOVERY.md](docs/BACKUP_RECOVERY.md) | Backups, restore drills, ledger integrity checks |

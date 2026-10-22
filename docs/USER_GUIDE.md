@@ -8,6 +8,11 @@
 4. **Add a dealership** (brands, sales / service / pre-owned, GSTIN) and its **locations**. For each location set the map pin, catchment radius, permitted and excluded PIN codes, the objectives it supports and who receives its leads. If a catchment overlaps another location's, you will see a warning; continuing requires a reason, which is recorded.
 5. **Connect advertising accounts** under *Settings → Connections*. You sign in with your own Meta and Google accounts; AutoSutra never asks for your passwords. Until AutoSutra's API access is approved you will see *Demo* or *Access pending*.
 6. **Invite your team** under *Team* and give each person a role.
+7. **Turn on two-step verification** under *Account → Two-step verification* (recommended for owners and finance users; required for wallet deposits and refund requests). Scan the QR code with an authenticator app, enter the code, and keep the recovery codes somewhere safe.
+
+## On your phone
+
+AutoSutra works in the phone's browser. To get an app icon, open AutoSutra in Chrome on Android and choose **Install app**, or in Safari on iPhone choose **Share → Add to Home Screen**. If AutoSutra gave you an Android app file (APK), you can install that instead.
 
 ## Roles
 

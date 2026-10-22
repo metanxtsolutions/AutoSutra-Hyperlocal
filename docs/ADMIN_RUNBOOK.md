@@ -12,6 +12,8 @@ For AutoSutra staff using `/admin`. Every action here is audited with your name;
 
 Staff cannot approve a customer's budget or raise authorised spend. A super admin cannot change their own staff role or status.
 
+**Two-step verification is required for every staff account.** The admin console opens only in a session that passed the two-step code; new staff are sent to Account → Two-step verification first. If someone loses their phone and recovery codes, another super admin confirms their identity through a separate channel (video call or a known phone number) and uses **Users → Reset two-step**, recording how identity was confirmed.
+
 ## Daily
 
 | Check | Where | Action |
@@ -25,6 +27,7 @@ Staff cannot approve a customer's budget or raise authorised spend. A super admi
 | Reconciliation differences | `/admin/finance/reconciliation` | See finance procedures |
 | Refund requests | `/admin/finance/refunds` | See finance procedures |
 | Support tickets, contact requests | `/admin/support`, `/admin/contact-requests` | Reply; internal notes are not shown to customers |
+| Failed or undelivered emails | `/admin/emails` | Check the SMTP error; a permanent rejection usually means a mistyped address |
 
 ## Finance procedures
 
