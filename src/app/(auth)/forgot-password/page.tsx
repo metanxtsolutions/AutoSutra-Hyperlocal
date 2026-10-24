@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Reset password" };
 export default function ForgotPasswordPage() {
   return (
     <>
-      <h1 className="text-xl font-bold">Reset your password</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Reset your password</h1>
       <p className="mt-1 text-sm text-ink-500">Enter your account email and we will send a reset link.</p>
       <div className="mt-6">
         <ActionForm action={forgotPasswordAction} resetOnSuccess>

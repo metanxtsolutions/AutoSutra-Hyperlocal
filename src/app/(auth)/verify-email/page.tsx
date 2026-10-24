@@ -16,7 +16,7 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
     const ok = await verifyEmail(getDb(), token);
     return (
       <>
-        <h1 className="text-xl font-bold">{ok ? "Email verified" : "Link not valid"}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{ok ? "Email verified" : "Link not valid"}</h1>
         <p className="mt-2 text-sm text-ink-600">
           {ok ? "Thanks, your email address is confirmed." : "This verification link is invalid, already used or expired. Sign in to request a new one."}
         </p>
@@ -27,7 +27,7 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
   const actor = await getActor();
   return (
     <>
-      <h1 className="text-xl font-bold">Verify your email</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Verify your email</h1>
       <p className="mt-2 text-sm text-ink-600">
         We sent a verification link to {actor ? <strong>{actor.user.email}</strong> : "your email address"}. Open it to continue setting up your organisation.
       </p>

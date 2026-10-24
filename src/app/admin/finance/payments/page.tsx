@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Card, CardHeader, PageHeader } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/badge";
+import { StatusBadge, humanize } from "@/components/ui/badge";
+import { FilterBar, FilterSelect } from "@/components/ui/filter-bar";
 import { Table, TBody, Td, Th, THead } from "@/components/ui/table";
 import { formatINR } from "@/lib/money";
 import { formatDateTime } from "@/lib/format";
@@ -18,7 +19,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader title="Payments" description="Gateway orders for invoices and advertising deposits. Status changes only through verified webhooks." />
-      <form method="get" className="mb-4"><select name="status" defaultValue={status ?? ""} className="h-9 rounded-md border border-ink-200 px-2 text-sm"><option value="">All statuses</option>{["created", "pending", "captured", "failed", "refunded"].map((s) => <option key={s}>{s}</option>)}</select> <button className="h-9 rounded-md bg-ink-900 px-3 text-sm font-semibold text-white">Filter</button></form>
+      <FilterBar resetHref="/admin/finance/payments" active={!!status}><FilterSelect name="status" label="Status" defaultValue={status} options={["created", "pending", "captured", "failed", "refunded"].map((s) => ({ value: s, label: humanize(s) }))} /></FilterBar>
       <Table>
         <THead><tr><Th>Created</Th><Th>Purpose</Th><Th>Gateway order</Th><Th className="text-right">Amount</Th><Th className="text-right">Fees</Th><Th className="text-right">Refunded</Th><Th>Status</Th><Th>Failure</Th></tr></THead>
         <TBody>

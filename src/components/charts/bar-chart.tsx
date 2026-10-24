@@ -20,7 +20,6 @@ export interface Datum {
   values: Record<string, number | null>;
 }
 
-export const SERIES_COLORS = { slot1: "#2a78d6", slot2: "#eb6834" } as const;
 
 type Format = "inr" | "count";
 

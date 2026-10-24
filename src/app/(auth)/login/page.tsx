@@ -10,7 +10,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { next } = await searchParams;
   return (
     <>
-      <h1 className="text-xl font-bold">Log in</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Log in</h1>
       <p className="mt-1 text-sm text-ink-500">Welcome back to AutoSutra.</p>
       <div className="mt-6">
         <ActionForm action={loginAction} showSuccess={false}>

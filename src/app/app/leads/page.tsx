@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Download, Inbox } from "lucide-react";
+import { buttonClass } from "@/components/ui/button";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { StatusBadge, humanize } from "@/components/ui/badge";
@@ -7,6 +9,7 @@ import { SelectField, TextAreaField, TextField } from "@/components/ui/fields";
 import { Checkbox } from "@/components/ui/form";
 import { Modal } from "@/components/ui/modal";
 import { Table, TBody, Td, Th, THead } from "@/components/ui/table";
+import { FilterBar, FilterInput, FilterSearch, FilterSelect } from "@/components/ui/filter-bar";
 import { formatDateTime } from "@/lib/format";
 import { can, requireOrg } from "@/server/auth/context";
 import { requireOrgActor } from "@/server/auth/session";
@@ -19,7 +22,6 @@ import { createLeadAction, importAction } from "./actions";
 export const metadata: Metadata = { title: "Lead centre" };
 
 const SOURCES = ["meta_instant_form", "google_lead_form", "website_form", "test_drive_form", "phone_call", "whatsapp_click", "manual_upload", "crm_import"];
-const sel = "h-9 rounded-md border border-ink-200 px-2 text-sm";
 
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
@@ -37,7 +39,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         description="Enquiries from ad forms, your website, test-drive forms, calls and uploads. Personal data is handled on your behalf and every lead carries its consent record."
         actions={
           <>
-            {can(actor, orgId, "lead.export") && <a href={`/api/leads/export?${qs}`} className="self-center text-sm font-semibold text-road-600">Export CSV</a>}
+            {can(actor, orgId, "lead.export") && <a href={`/api/leads/export?${qs}`} className={buttonClass("ghost")}><Download />Export CSV</a>}
             {manage && (
               <Modal trigger="Import CSV" title="Import leads from CSV">
                 <ActionForm action={importAction}>
@@ -70,27 +72,46 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           </>
         }
       />
-      <form method="get" className="mb-4 flex flex-wrap items-end gap-3 text-sm">
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Search</span><input name="q" defaultValue={sp.q} placeholder="Name, phone, email, model" className={sel} /></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Status</span><select name="status" defaultValue={sp.status ?? ""} className={sel}><option value="">All</option>{LEAD_STATUSES.map((s) => <option key={s} value={s}>{humanize(s)}</option>)}</select></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Location</span><select name="locationId" defaultValue={sp.locationId ?? ""} className={sel}><option value="">All</option>{locs.map((l) => <option key={l.location.id} value={l.location.id}>{l.location.name}</option>)}</select></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Source</span><select name="source" defaultValue={sp.source ?? ""} className={sel}><option value="">All</option>{SOURCES.map((s) => <option key={s} value={s}>{humanize(s)}</option>)}</select></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Assigned to</span><select name="assignedToId" defaultValue={sp.assignedToId ?? ""} className={sel}><option value="">Anyone</option><option value="unassigned">Unassigned</option>{people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">From</span><input type="date" name="from" defaultValue={sp.from} className={sel} /></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">To</span><input type="date" name="to" defaultValue={sp.to} className={sel} /></label>
-        <button className="h-9 rounded-md bg-ink-900 px-3 font-semibold text-white">Filter</button>
-      </form>
+      <FilterBar resetHref="/app/leads" active={Object.values(sp).some(Boolean)}>
+        <FilterSearch defaultValue={sp.q} placeholder="Name, phone, email, model" />
+        <FilterSelect name="status" label="Status" defaultValue={sp.status} options={LEAD_STATUSES.map((s) => ({ value: s, label: humanize(s) }))} />
+        <FilterSelect name="locationId" label="Location" defaultValue={sp.locationId} options={locs.map((l) => ({ value: l.location.id, label: l.location.name }))} />
+        <FilterSelect name="source" label="Source" defaultValue={sp.source} options={SOURCES.map((s) => ({ value: s, label: humanize(s) }))} />
+        <FilterSelect name="assignedToId" label="Assigned to" allLabel="Anyone" defaultValue={sp.assignedToId} extra={[{ value: "unassigned", label: "Unassigned" }]} options={people.map((p) => ({ value: p.id, label: p.name }))} />
+        <FilterInput type="date" name="from" label="From" defaultValue={sp.from} />
+        <FilterInput type="date" name="to" label="To" defaultValue={sp.to} />
+      </FilterBar>
       {rows.length === 0 ? (
-        <EmptyState title="No leads match" description="Share your location's enquiry form, connect a Meta lead form campaign, or add leads manually." />
+        <EmptyState icon={<Inbox />} title="No leads match" description="Share your location's enquiry form, connect a Meta lead form campaign, or add leads manually." />
       ) : (
-        <Table>
+        <>
+        <ul className="space-y-3 md:hidden">
+          {rows.map((r) => (
+            <li key={r.lead.id}>
+              <Link href={`/app/leads/${r.lead.id}`} className="block rounded-[var(--radius-card)] border border-ink-200/80 bg-white p-4 shadow-[var(--shadow-card)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-semibold text-ink-950">{r.lead.anonymisedAt ? "Anonymised" : r.lead.name ?? r.lead.phone ?? r.lead.email}</div>
+                    <div className="truncate text-xs text-ink-500">{[r.lead.vehicleBrand, r.lead.vehicleModel].filter(Boolean).join(" ") || "No model given"} · {r.locationName ?? "No location"}</div>
+                  </div>
+                  <span className="flex-none"><StatusBadge status={r.lead.status} /></span>
+                </div>
+                <div className="mt-2 flex justify-between gap-3 text-xs text-ink-500">
+                  <span>{humanize(r.lead.source)}{r.assigneeName ? ` · ${r.assigneeName}` : ""}</span>
+                  <span className="whitespace-nowrap">{formatDateTime(r.lead.createdAt)}</span>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <Table className="hidden md:block">
           <THead><tr><Th>Received (IST)</Th><Th>Customer</Th><Th>Interest</Th><Th>Location</Th><Th>Source</Th><Th>Assigned</Th><Th>Status</Th></tr></THead>
           <TBody>
             {rows.map((r) => (
               <tr key={r.lead.id}>
                 <Td className="whitespace-nowrap text-xs">{formatDateTime(r.lead.createdAt)}</Td>
                 <Td>
-                  <Link href={`/app/leads/${r.lead.id}`} className="font-medium text-road-600 hover:underline">{r.lead.anonymisedAt ? "Anonymised" : r.lead.name ?? r.lead.phone ?? r.lead.email}</Link>
+                  <Link href={`/app/leads/${r.lead.id}`} className="font-medium text-ink-950 hover:text-road-600">{r.lead.anonymisedAt ? "Anonymised" : r.lead.name ?? r.lead.phone ?? r.lead.email}</Link>
                   {!r.lead.anonymisedAt && <div className="text-xs text-ink-500">{r.lead.phone}</div>}
                 </Td>
                 <Td className="text-sm">{[r.lead.vehicleBrand, r.lead.vehicleModel].filter(Boolean).join(" ") || "–"}{r.campaignName && <div className="text-xs text-ink-500">{r.campaignName}</div>}</Td>
@@ -102,6 +123,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             ))}
           </TBody>
         </Table>
+        </>
       )}
     </>
   );

@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui/card";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { SelectField, TextField } from "@/components/ui/fields";
 import { Modal } from "@/components/ui/modal";
+import { FilterBar, FilterSearch } from "@/components/ui/filter-bar";
 import { Table, TBody, Td, Th, THead } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/format";
 import { ROLE_LABELS } from "@/server/auth/permissions";
@@ -22,7 +23,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageHeader title="Users and permissions" description="Customer roles are managed by each organisation. Staff roles grant cross-organisation access and are changed only by a super admin." />
-      <form method="get" className="mb-4"><input name="q" defaultValue={q} placeholder="Search name or email" className="h-9 w-72 rounded-md border border-ink-200 px-2 text-sm" /></form>
+      <FilterBar resetHref="/admin/users" active={!!q} submitLabel="Search"><FilterSearch defaultValue={q} placeholder="Name or email" /></FilterBar>
       <Table>
         <THead><tr><Th>User</Th><Th>Organisations</Th><Th>Staff role</Th><Th>Two-step</Th><Th>Status</Th><Th>Last login</Th><Th></Th></tr></THead>
         <TBody>

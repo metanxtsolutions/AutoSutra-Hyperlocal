@@ -21,12 +21,12 @@ export default async function CustomerLayout({ children }: { children: React.Rea
   ]);
   const onboardingDone = steps.every((s) => s.done);
   const banner = !actor.user.emailVerified ? (
-    <div className="border-b border-warn-100 bg-warn-100 px-4 py-2 text-center text-sm text-ink-900">
+    <div className="border-b border-warn-100 bg-warn-50 px-4 py-2 text-center text-sm text-ink-900">
       Please verify your email address. <Link href="/verify-email" className="font-semibold underline">Resend link</Link>
     </div>
   ) : null;
   return (
-    <AppShell actor={actor} nav={customerNav(actor, { walletEnabled, onboardingDone, counts })} orgs={orgs} banner={banner}>
+    <AppShell actor={actor} nav={customerNav(actor, { walletEnabled, onboardingDone, counts })} orgs={orgs} banner={banner} notifications={actor.membership ? { href: "/app/notifications", count: counts.notifications ?? 0 } : undefined}>
       {orgs.some((o) => o.status === "suspended" && o.id === actor.membership?.organisationId) && (
         <div className="mb-4">
           <Alert tone="bad" title="This organisation is suspended">Contact AutoSutra support. Data is read-only until the suspension is lifted.</Alert>

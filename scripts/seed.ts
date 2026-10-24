@@ -1,6 +1,7 @@
 import "../src/server/load-env";
 /**
- * Demo seed. Creates AutoSutra staff accounts and a demo dealer group.
+ * Demo seed. Creates AutoSutra staff accounts and a demo dealer group with
+ * sample campaigns and enquiries (see seed-sample.ts).
  * Runs in development and on hosted previews (APP_STAGE=preview); refuses
  * production. A preview needs SEED_PASSWORD, so its demo accounts never use
  * the published development password.
@@ -12,6 +13,7 @@ import { eq, sql } from "drizzle-orm";
 import { closeDb, getDb } from "../src/server/db/client";
 import { dealerships, locations, organisationMemberships, organisations, users } from "../src/server/db/schema";
 import { hashPassword } from "../src/server/crypto";
+import { seedSampleActivity } from "./seed-sample";
 
 const STAGE = process.env.APP_STAGE ?? (process.env.NODE_ENV === "production" ? "production" : "development");
 const PASSWORD = process.env.SEED_PASSWORD || (STAGE === "development" ? "autosutra-dev-2026" : "");
@@ -82,6 +84,12 @@ async function main() {
       { organisationId: org.id, dealershipId: d.id, name: "Andheri Showroom", address: "12 Link Road, Andheri West", city: "Mumbai", state: "Maharashtra", pincode: "400053", latitude: 19.1364, longitude: 72.8296, defaultRadiusKm: 5 },
       { organisationId: org.id, dealershipId: d.id, name: "Goregaon Service Centre", kind: "service_centre", address: "Aarey Road, Goregaon East", city: "Mumbai", state: "Maharashtra", pincode: "400063", latitude: 19.1663, longitude: 72.8526, defaultRadiusKm: 3 },
     ]);
+  }
+  try {
+    if (await seedSampleActivity(db, org.id, owner.id, sales.id)) console.log("Added sample campaigns and enquiries to Demo Motors Group.");
+  } catch (e) {
+    // Sample activity is a nicety; never fail a deploy build over it.
+    console.warn("Sample activity was not added:", e instanceof Error ? e.message : e);
   }
   console.log(STAGE === "development" ? `Seeded. Sign in with any of the seeded emails and password: ${PASSWORD}` : "Seeded. Sign in with the seeded emails and the SEED_PASSWORD value.");
   await closeDb();

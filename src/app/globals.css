@@ -2,7 +2,7 @@
 
 /* AutoSutra design tokens. Colours meet WCAG AA contrast on their intended backgrounds. */
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --color-ink-950: #0a1222;
@@ -24,23 +24,34 @@
   --color-brand-100: #fef3c7;
   --color-brand-50: #fffbeb;
 
+  /* Primary accent: buttons, links, active navigation, focus. */
+  --color-road-700: #1e40af;
   --color-road-600: #1d4ed8;
   --color-road-500: #2563eb;
   --color-road-100: #dbeafe;
+  --color-road-50: #eff6ff;
 
   --color-ok-700: #15803d;
+  --color-ok-500: #22c55e;
   --color-ok-100: #dcfce7;
+  --color-ok-50: #f0fdf4;
   --color-warn-700: #a16207;
+  --color-warn-500: #eab308;
   --color-warn-100: #fef9c3;
+  --color-warn-50: #fefce8;
   --color-bad-700: #b91c1c;
+  --color-bad-500: #ef4444;
   --color-bad-100: #fee2e2;
+  --color-bad-50: #fef2f2;
 
   --radius-card: 0.75rem;
+  --shadow-card: 0 1px 2px 0 rgb(15 27 49 / 0.04), 0 1px 3px 0 rgb(15 27 49 / 0.05);
+  --shadow-pop: 0 10px 30px -10px rgb(15 27 49 / 0.25), 0 4px 10px -6px rgb(15 27 49 / 0.15);
 }
 
 @layer base {
   html { color-scheme: light; }
-  body { @apply bg-ink-50 text-ink-900 antialiased; }
+  body { @apply bg-ink-50 text-ink-900 antialiased; font-feature-settings: "cv11", "ss01"; }
   :focus-visible { @apply outline-2 outline-offset-2 outline-road-500; }
   h1, h2, h3 { @apply text-ink-950; }
   /* Grid and flex children may shrink below their content, so wide tables scroll inside their own wrapper. */
@@ -48,3 +59,7 @@
 }
 
 .leaflet-container { font: inherit; }
+
+/* Hide the disclosure triangle on <details> menus. */
+summary::-webkit-details-marker { display: none; }
+summary { list-style: none; }

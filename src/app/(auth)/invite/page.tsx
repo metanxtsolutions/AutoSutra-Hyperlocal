@@ -14,7 +14,7 @@ export default async function InvitePage({ searchParams }: { searchParams: Promi
   const back = `/invite?token=${encodeURIComponent(token)}`;
   return (
     <>
-      <h1 className="text-xl font-bold">Join your team on AutoSutra</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Join your team on AutoSutra</h1>
       {!actor ? (
         <>
           <p className="mt-2 text-sm text-ink-600">Sign in, or create an account with the email address the invitation was sent to.</p>

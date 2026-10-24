@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Create account" };
 export default function RegisterPage() {
   return (
     <>
-      <h1 className="text-xl font-bold">Create your account</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
       <p className="mt-1 text-sm text-ink-500">You will set up your organisation and first dealership next.</p>
       <div className="mt-6">
         <ActionForm action={registerAction} showSuccess={false}>

@@ -2,7 +2,7 @@ import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTML
 import { cn } from "@/lib/cn";
 
 const control =
-  "block w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 shadow-sm placeholder:text-ink-400 focus:border-road-500 focus:outline-none focus:ring-2 focus:ring-road-100 disabled:bg-ink-50 aria-[invalid=true]:border-bad-700";
+  "block w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 shadow-[0_1px_2px_0_rgb(15_27_49/0.04)] transition-colors placeholder:text-ink-400 hover:border-ink-300 focus:border-road-500 focus:outline-none focus:ring-4 focus:ring-road-100 disabled:bg-ink-50 aria-[invalid=true]:border-bad-700 aria-[invalid=true]:focus:ring-bad-100";
 
 export function Field({
   label,
@@ -23,7 +23,7 @@ export function Field({
 }) {
   return (
     <div className={cn("space-y-1", className)}>
-      <label htmlFor={name} className="block text-sm font-medium text-ink-800">
+      <label htmlFor={name} className="block text-[13px] font-medium text-ink-800">
         {label}
         {required && <span aria-hidden className="text-bad-700"> *</span>}
       </label>

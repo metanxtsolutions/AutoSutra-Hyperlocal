@@ -4,18 +4,19 @@ import { cn } from "@/lib/cn";
 export type Tone = "neutral" | "info" | "ok" | "warn" | "bad" | "brand" | "demo";
 
 const tones: Record<Tone, string> = {
-  neutral: "bg-ink-100 text-ink-700 ring-ink-200",
-  info: "bg-road-100 text-road-600 ring-road-100",
-  ok: "bg-ok-100 text-ok-700 ring-ok-100",
-  warn: "bg-warn-100 text-warn-700 ring-warn-100",
-  bad: "bg-bad-100 text-bad-700 ring-bad-100",
-  brand: "bg-brand-100 text-brand-700 ring-brand-100",
-  demo: "bg-white text-ink-600 ring-ink-300 border border-dashed border-ink-400",
+  neutral: "bg-ink-100/80 text-ink-700 ring-ink-200 [--dot:var(--color-ink-400)]",
+  info: "bg-road-50 text-road-700 ring-road-100 [--dot:var(--color-road-500)]",
+  ok: "bg-ok-50 text-ok-700 ring-ok-100 [--dot:var(--color-ok-500)]",
+  warn: "bg-warn-50 text-warn-700 ring-warn-100 [--dot:var(--color-warn-500)]",
+  bad: "bg-bad-50 text-bad-700 ring-bad-100 [--dot:var(--color-bad-500)]",
+  brand: "bg-brand-50 text-brand-700 ring-brand-100 [--dot:var(--color-brand-500)]",
+  demo: "bg-white text-ink-600 ring-ink-300 border border-dashed border-ink-400 [--dot:var(--color-ink-400)]",
 };
 
-export function Badge({ tone = "neutral", children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
+export function Badge({ tone = "neutral", children, className, dot = true }: { tone?: Tone; children: ReactNode; className?: string; dot?: boolean }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset whitespace-nowrap", tones[tone], className)}>
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset whitespace-nowrap", tones[tone], className)}>
+      {dot && <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-[var(--dot)]" />}
       {children}
     </span>
   );

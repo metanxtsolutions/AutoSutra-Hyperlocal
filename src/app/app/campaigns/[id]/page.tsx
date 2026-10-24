@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { and, desc, eq, inArray } from "drizzle-orm";
+import { BadgeCheck, CalendarRange, Pencil, PiggyBank, Wallet } from "lucide-react";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert, Card, CardHeader, DescriptionList, PageHeader, Stat } from "@/components/ui/card";
@@ -42,14 +42,14 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
   return (
     <>
       <PageHeader
-        eyebrow={<Link href="/app/campaigns" className="hover:underline">Campaigns</Link>}
+        breadcrumbs={[{ label: "Campaigns", href: "/app/campaigns" }, { label: c.name }]}
         title={c.name}
         description={`${objectiveDef(c.objective)?.label} · ${full.dealership.name}: ${full.primaryLocation.name}`}
         actions={
           <>
             <StatusBadge status={c.status} />
             {c.managed && <Badge tone="brand">Managed by AutoSutra</Badge>}
-            {editable && can(actor, orgId, "campaign.edit") && <ButtonLink href={`/app/campaigns/${c.id}/edit`} variant="secondary">Edit</ButtonLink>}
+            {editable && can(actor, orgId, "campaign.edit") && <ButtonLink href={`/app/campaigns/${c.id}/edit`} variant="secondary"><Pencil />Edit</ButtonLink>}
             <ButtonLink href={`/app/campaigns/${c.id}/review`} variant={c.status === "pending_approval" ? "primary" : "secondary"}>{c.status === "pending_approval" ? "Review and approve" : "Review"}</ButtonLink>
           </>
         }
@@ -65,11 +65,11 @@ export default async function CampaignPage({ params }: { params: Promise<{ id: s
           </Alert>
         </div>
       )}
-      <div className="grid gap-4 sm:grid-cols-4">
-        <Stat label="Planned budget" value={formatINR(total, { decimals: false })} />
-        <Stat label="Approved budget" value={formatINR(full.approvals.find((a) => a.id === c.currentApprovalId)?.approvedBudget ?? null, { decimals: false })} hint={c.currentApprovalId ? "Customer approval on record" : "Not approved yet"} />
-        <Stat label="Provider-reported spend" value={formatINR(reported, { decimals: false })} hint={full.platforms.some((p) => p.platform.mode === "demo") ? "Demo publications report no spend" : "As last synced"} />
-        <Stat label="Remaining approved" value={c.currentApprovalId ? formatINR(Math.max(0, (full.approvals.find((a) => a.id === c.currentApprovalId)?.approvedBudget ?? 0) - reported), { decimals: false }) : "–"} />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <Stat label="Planned budget" icon={<CalendarRange />} value={formatINR(total, { decimals: false })} />
+        <Stat label="Approved budget" icon={<BadgeCheck />} value={formatINR(full.approvals.find((a) => a.id === c.currentApprovalId)?.approvedBudget ?? null, { decimals: false })} hint={c.currentApprovalId ? "Customer approval on record" : "Not approved yet"} />
+        <Stat label="Provider-reported spend" icon={<Wallet />} value={formatINR(reported, { decimals: false })} hint={full.platforms.some((p) => p.platform.mode === "demo") ? "Demo publications report no spend" : "As last synced"} />
+        <Stat label="Remaining approved" icon={<PiggyBank />} value={c.currentApprovalId ? formatINR(Math.max(0, (full.approvals.find((a) => a.id === c.currentApprovalId)?.approvedBudget ?? 0) - reported), { decimals: false }) : "–"} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">

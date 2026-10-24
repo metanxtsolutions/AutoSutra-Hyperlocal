@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Megaphone, Plus } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { StatusBadge, humanize } from "@/components/ui/badge";
 import { Table, TBody, Td, Th, THead } from "@/components/ui/table";
+import { FilterBar, FilterSearch, FilterSelect } from "@/components/ui/filter-bar";
 import { OBJECTIVES, objectiveDef } from "@/lib/objectives";
 import { formatINR } from "@/lib/money";
 import { formatDate } from "@/lib/format";
@@ -28,45 +30,51 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Pr
   const canCreate = can(actor, orgId, "campaign.edit");
   return (
     <>
-      <PageHeader title="Campaigns" description="Every campaign shows each platform's status separately. Active means the platform confirmed it." actions={canCreate && <ButtonLink href="/app/campaigns/new">New campaign</ButtonLink>} />
-      <form method="get" className="mb-4 flex flex-wrap items-end gap-3 text-sm">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-600">Search</span>
-          <input name="q" defaultValue={sp.q} className="h-9 rounded-md border border-ink-200 px-2" placeholder="Campaign name" />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-600">Status</span>
-          <select name="status" defaultValue={sp.status ?? ""} className="h-9 rounded-md border border-ink-200 px-2">
-            <option value="">All</option>
-            {STATUSES.map((s) => <option key={s} value={s}>{humanize(s)}</option>)}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-600">Dealership</span>
-          <select name="dealershipId" defaultValue={sp.dealershipId ?? ""} className="h-9 rounded-md border border-ink-200 px-2">
-            <option value="">All</option>
-            {dealers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink-600">Objective</span>
-          <select name="objective" defaultValue={sp.objective ?? ""} className="h-9 rounded-md border border-ink-200 px-2">
-            <option value="">All</option>
-            {OBJECTIVES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </label>
-        <button type="submit" className="h-9 rounded-md bg-ink-900 px-3 font-semibold text-white">Filter</button>
-      </form>
+      <PageHeader title="Campaigns" description="Every campaign shows each platform's status separately. Active means the platform confirmed it." actions={canCreate && <ButtonLink href="/app/campaigns/new"><Plus />New campaign</ButtonLink>} />
+      <FilterBar resetHref="/app/campaigns" active={Object.values(sp).some(Boolean)}>
+        <FilterSearch defaultValue={sp.q} placeholder="Campaign name" />
+        <FilterSelect name="status" label="Status" defaultValue={sp.status} options={STATUSES.map((s) => ({ value: s, label: humanize(s) }))} />
+        <FilterSelect name="dealershipId" label="Dealership" defaultValue={sp.dealershipId} options={dealers.map((d) => ({ value: d.id, label: d.name }))} />
+        <FilterSelect name="objective" label="Objective" defaultValue={sp.objective} options={OBJECTIVES} />
+      </FilterBar>
       {rows.length === 0 ? (
-        <EmptyState title="No campaigns found" description="Start with a template for test drives, launches, service camps and more." action={canCreate && <ButtonLink href="/app/campaigns/new">Create a campaign</ButtonLink>} />
+        <EmptyState icon={<Megaphone />} title="No campaigns found" description="Start with a template for test drives, launches, service camps and more." action={canCreate && <ButtonLink href="/app/campaigns/new">Create a campaign</ButtonLink>} />
       ) : (
-        <Table>
+        <>
+        <ul className="space-y-3 md:hidden">
+          {rows.map((r) => (
+            <li key={r.campaign.id}>
+              <Link href={`/app/campaigns/${r.campaign.id}`} className="block rounded-[var(--radius-card)] border border-ink-200/80 bg-white p-4 shadow-[var(--shadow-card)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-semibold text-ink-950">{r.campaign.name}</div>
+                    <div className="truncate text-xs text-ink-500">{objectiveDef(r.campaign.objective)?.label} · {r.locationName}</div>
+                  </div>
+                  <span className="flex-none"><StatusBadge status={r.campaign.status} /></span>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+                  <span className="tabular-nums font-medium">{formatINR(r.budget, { decimals: false })}</span>
+                  <span className="text-xs text-ink-500">{r.campaign.startDate ? `${formatDate(r.campaign.startDate)} to ${formatDate(r.campaign.endDate)}` : "Dates not set"}</span>
+                </div>
+                {r.platforms.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {r.platforms.map((p) => {
+                      const [provider, status] = p.split(":");
+                      return <StatusBadge key={p} status={status} label={`${provider === "meta" ? "Meta" : "Google"}: ${humanize(status)}`} />;
+                    })}
+                  </div>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <Table className="hidden md:block">
           <THead><tr><Th>Campaign</Th><Th>Location</Th><Th>Status</Th><Th>Platforms</Th><Th>Planned budget</Th><Th>Dates</Th></tr></THead>
           <TBody>
             {rows.map((r) => (
               <tr key={r.campaign.id}>
                 <Td>
-                  <Link href={`/app/campaigns/${r.campaign.id}`} className="font-semibold text-road-600 hover:underline">{r.campaign.name}</Link>
+                  <Link href={`/app/campaigns/${r.campaign.id}`} className="font-semibold text-ink-950 hover:text-road-600">{r.campaign.name}</Link>
                   <div className="text-xs text-ink-500">{objectiveDef(r.campaign.objective)?.label}</div>
                 </Td>
                 <Td className="text-sm">{r.dealershipName}<div className="text-xs text-ink-500">{r.locationName}</div></Td>
@@ -85,6 +93,7 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Pr
             ))}
           </TBody>
         </Table>
+        </>
       )}
     </>
   );

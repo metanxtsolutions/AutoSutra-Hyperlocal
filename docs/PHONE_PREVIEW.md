@@ -42,6 +42,8 @@ Both open full screen with the AutoSutra icon. Both always show the latest deplo
 | `admin@autosutra.local` | AutoSutra super admin |
 | `finance@autosutra.local`, `ops@autosutra.local` | AutoSutra finance and campaign operations |
 
+The owner account opens with sample activity: three sample campaigns (one published in demo mode, one waiting for approval, one draft) and 17 sample enquiries, all labelled "(sample)". They are there to show the screens in use; spend stays at ₹0 because demo publications report no provider data.
+
 The password is the `SEED_PASSWORD` you set. AutoSutra staff accounts must set up two-step verification (an authenticator app such as Google Authenticator) before the admin console opens.
 
 New sign-ups work too. Without an email provider, verification emails are not delivered: a staff user can find the link under **Admin → Emails** (message contents are only shown outside production).

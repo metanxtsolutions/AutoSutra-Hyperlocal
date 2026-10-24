@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BuilderSteps } from "@/components/app/builder-steps";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Card, CardHeader, EmptyState, PageHeader } from "@/components/ui/card";
 import { SelectField, TextField } from "@/components/ui/fields";
@@ -34,7 +35,8 @@ export default async function NewCampaignPage({ searchParams }: { searchParams: 
   const groups = ["Sales", "Service", "Brand and events", "Response"] as const;
   return (
     <>
-      <PageHeader eyebrow="Step 1 of 9" title="New campaign: choose location and objective" description="You can save and come back to any step. Nothing is published until an approver signs off." />
+      <PageHeader breadcrumbs={[{ label: "Campaigns", href: "/app/campaigns" }, { label: "New campaign" }]} title="New campaign" description="Choose where to advertise and what for. You can save and come back to any step. Nothing is published until an approver signs off." />
+      <BuilderSteps current="location" />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <ActionForm action={createCampaignAction} showSuccess={false}>

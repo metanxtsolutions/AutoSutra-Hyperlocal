@@ -59,7 +59,7 @@ export function ActionForm({
     <FormStateContext.Provider value={state}>
       <form ref={formRef} action={formAction} className={cn("space-y-4", className)} noValidate>
         {state.error && (
-          <div role="alert" className="rounded-lg border border-bad-100 bg-bad-100/60 px-4 py-3 text-sm text-bad-700">
+          <div role="alert" className="rounded-lg border border-bad-100 bg-bad-50 px-4 py-3 text-sm font-medium text-bad-700">
             {state.error}
           </div>
         )}

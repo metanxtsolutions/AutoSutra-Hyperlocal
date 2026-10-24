@@ -11,12 +11,12 @@ export function Tabs({ tabs, active }: { tabs: { key: string; label: string; hre
           href={t.href}
           aria-current={t.key === active ? "page" : undefined}
           className={cn(
-            "-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium",
-            t.key === active ? "border-brand-500 text-ink-950" : "border-transparent text-ink-500 hover:text-ink-800",
+            "-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
+            t.key === active ? "border-road-600 text-ink-950" : "border-transparent text-ink-500 hover:border-ink-300 hover:text-ink-800",
           )}
         >
           {t.label}
-          {t.count !== undefined && <span className="ml-1.5 rounded-full bg-ink-100 px-1.5 text-xs text-ink-600">{t.count}</span>}
+          {t.count !== undefined && <span className="ml-1.5 rounded-full bg-ink-100 px-1.5 py-0.5 text-xs tabular-nums text-ink-600">{t.count}</span>}
         </Link>
       ))}
     </nav>

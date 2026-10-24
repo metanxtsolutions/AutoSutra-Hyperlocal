@@ -13,7 +13,7 @@ Automotive hyperlocal advertising management for India: dealerships and dealer g
 | Accounts | Email/password with scrypt, email verification, password reset, rate limiting, hashed session tokens, invitations, two-step verification (authenticator app and recovery codes; required for staff and money movements), SMTP email delivery |
 | Tenancy and roles | Organisations (independent dealer, dealer group, agency), 7 organisation roles and 3 AutoSutra staff roles, location-limited access, server-side enforcement on every query |
 | Dealerships and locations | Brands, category, type, GSTIN, verification; locations with map pin, radius, permitted / excluded PIN codes, supported objectives, monthly budget limit, lead routing; territory overlap warnings with audited override |
-| Campaign builder | 9 steps: location, objective (17 automotive objectives mapped to real provider campaign types), product and claims, platforms, targeting, audience, budget per platform and location, creative with uploads and previews, review |
+| Campaign builder | Seven screens with a progress stepper: location, objective and product with claims (17 automotive objectives mapped to real provider campaign types), platforms, targeting and audience, budget per platform and location, creative with uploads and previews, review |
 | Approvals | Customer approval bound to a SHA-256 configuration fingerprint; separation of duties; claims confirmation; managed-service sign-off by AutoSutra operations; operators cannot raise authorised spend |
 | Publishing | Meta Marketing API and Google Ads API adapters, demo adapter, background job queue with retries, idempotent per-step publishing, per-platform status exactly as reported, sync of status and metrics, spend alerts, auto-pause at the authorised maximum |
 | Money | Double-entry append-only ledger, dealer-funded default, central wallet behind a flag, verified webhooks, refunds with finance approval, reconciliation with two-person adjustments, subscriptions and GST invoices |
@@ -44,7 +44,7 @@ cp .env.example .env.local      # development defaults work as-is; never commit 
 
 # 4. Schema and demo data
 npm run db:migrate
-npm run db:seed                 # demo users; password autosutra-dev-2026
+npm run db:seed                 # demo users and sample activity; password autosutra-dev-2026
 
 # 5. Run the app and the background worker (two terminals)
 npm run dev                     # http://localhost:3000
@@ -52,6 +52,8 @@ npm run worker                  # publishing, sync, reconciliation, billing, ale
 ```
 
 Seeded accounts (development only): `admin@autosutra.local` (super admin), `finance@autosutra.local`, `ops@autosutra.local`, `owner@demo-motors.local` (dealer owner), `sales@demo-motors.local`.
+
+The seed also gives Demo Motors Group sample activity (`scripts/seed-sample.ts`), once, if it has no campaigns yet: a campaign published in demo mode, one waiting for approval, a draft, and 17 enquiries at different stages. Every sample record is labelled "(sample)". No provider spend or delivery is invented, so spend figures stay at ₹0 and cost figures show "–".
 
 Development helpers:
 

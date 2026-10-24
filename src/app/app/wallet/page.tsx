@@ -5,6 +5,7 @@ import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Alert, Card, CardHeader, EmptyState, PageHeader, Stat } from "@/components/ui/card";
 import { StatusBadge, humanize } from "@/components/ui/badge";
 import { TextAreaField, TextField } from "@/components/ui/fields";
+import { FilterBar, FilterInput } from "@/components/ui/filter-bar";
 import { Table, TBody, Td, Th, THead } from "@/components/ui/table";
 import { formatINR } from "@/lib/money";
 import { formatDateTime, relativeAge } from "@/lib/format";
@@ -77,11 +78,10 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
               title="Transactions"
               actions={<a className="text-sm font-semibold text-road-600" href={`/api/wallet/statement${qs.size ? `?${qs}` : ""}`}>Download CSV statement</a>}
             />
-            <form method="get" className="mb-3 flex flex-wrap items-end gap-3 text-sm">
-              <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">From</span><input type="date" name="from" defaultValue={sp.from} className="h-9 rounded-md border border-ink-200 px-2" /></label>
-              <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">To</span><input type="date" name="to" defaultValue={sp.to} className="h-9 rounded-md border border-ink-200 px-2" /></label>
-              <button className="h-9 rounded-md bg-ink-900 px-3 font-semibold text-white">Filter</button>
-            </form>
+            <FilterBar resetHref="/app/wallet" active={!!(sp.from || sp.to)} className="mb-3 shadow-none">
+              <FilterInput type="date" name="from" label="From" defaultValue={sp.from} />
+              <FilterInput type="date" name="to" label="To" defaultValue={sp.to} />
+            </FilterBar>
             {w.entries.length === 0 ? (
               <EmptyState title="No transactions in this period" />
             ) : (

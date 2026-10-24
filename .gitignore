@@ -12,3 +12,4 @@ next-env.d.ts
 .env.*.local
 /storage/
 .DS_Store
+.next-*/

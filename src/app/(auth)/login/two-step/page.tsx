@@ -13,7 +13,7 @@ export default async function TwoStepPage({ searchParams }: { searchParams: Prom
   const { next } = await searchParams;
   return (
     <>
-      <h1 className="text-xl font-bold">Enter your code</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Enter your code</h1>
       <p className="mt-1 text-sm text-ink-500">Open your authenticator app and enter the 6-digit code for AutoSutra.</p>
       <div className="mt-6">
         <ActionForm action={twoStepLoginAction} showSuccess={false}>

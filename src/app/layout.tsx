@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toast";
 import { ServiceWorker } from "@/components/service-worker";
+import "@fontsource-variable/inter";
 import "./globals.css";
 
 export const metadata: Metadata = {

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Building2, MapPin, Plus } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, PageHeader } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
-import { Table, TBody, Td, Th, THead } from "@/components/ui/table";
 import { DEALERSHIP_TYPE_OPTIONS, VEHICLE_CATEGORY_OPTIONS, labelFor } from "@/lib/catalog";
 import { can } from "@/server/auth/context";
 import { requireOrgActor } from "@/server/auth/session";
@@ -23,44 +23,43 @@ export default async function DealershipsPage() {
       <PageHeader
         title="Dealerships"
         description="Each dealership has its own brands, address, verification status and locations."
-        actions={canManage && <ButtonLink href="/app/dealerships/new">Add dealership</ButtonLink>}
+        actions={canManage && <ButtonLink href="/app/dealerships/new"><Plus />Add dealership</ButtonLink>}
       />
       {rows.length === 0 ? (
         <EmptyState
+          icon={<Building2 />}
           title="No dealerships yet"
           description="Add your first dealership, then add its showroom and service locations."
           action={canManage && <ButtonLink href="/app/dealerships/new">Add dealership</ButtonLink>}
         />
       ) : (
-        <Table>
-          <THead>
-            <tr>
-              <Th>Dealership</Th>
-              <Th>Brands</Th>
-              <Th>Type</Th>
-              <Th>City</Th>
-              <Th>Locations</Th>
-              <Th>Verification</Th>
-              <Th>Status</Th>
-            </tr>
-          </THead>
-          <TBody>
-            {rows.map((d) => (
-              <tr key={d.id}>
-                <Td>
-                  <Link href={`/app/dealerships/${d.id}`} className="font-semibold text-road-600 hover:underline">{d.name}</Link>
-                  <div className="text-xs text-ink-500">{labelFor(VEHICLE_CATEGORY_OPTIONS, d.vehicleCategory)}</div>
-                </Td>
-                <Td>{d.brands.join(", ")}</Td>
-                <Td>{labelFor(DEALERSHIP_TYPE_OPTIONS, d.dealershipType)}</Td>
-                <Td>{d.city}, {d.state}</Td>
-                <Td>{locs.filter((l) => l.location.dealershipId === d.id).length}</Td>
-                <Td><StatusBadge status={d.verificationStatus} /></Td>
-                <Td><StatusBadge status={d.status} /></Td>
-              </tr>
-            ))}
-          </TBody>
-        </Table>
+        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {rows.map((d) => {
+            const count = locs.filter((l) => l.location.dealershipId === d.id).length;
+            return (
+              <li key={d.id}>
+                <Link href={`/app/dealerships/${d.id}`} className="group flex h-full flex-col rounded-[var(--radius-card)] border border-ink-200/80 bg-white p-5 shadow-[var(--shadow-card)] transition-colors hover:border-ink-300">
+                  <div className="flex items-start gap-3">
+                    <span aria-hidden className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-ink-900 text-sm font-semibold text-white">{d.name.charAt(0).toUpperCase()}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-semibold text-ink-950 group-hover:text-road-600">{d.name}</div>
+                      <div className="truncate text-xs text-ink-500">{labelFor(DEALERSHIP_TYPE_OPTIONS, d.dealershipType)} · {labelFor(VEHICLE_CATEGORY_OPTIONS, d.vehicleCategory)}</div>
+                    </div>
+                    <StatusBadge status={d.status} />
+                  </div>
+                  <div className="mb-4 mt-4 flex flex-1 flex-wrap content-start gap-1.5">
+                    {d.brands.map((b) => <span key={b} className="rounded-md bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-700">{b}</span>)}
+                  </div>
+                  <div className="flex items-center justify-between gap-3 border-t border-ink-100 pt-3 text-sm text-ink-600">
+                    <span className="inline-flex items-center gap-1.5"><MapPin aria-hidden className="h-4 w-4 text-ink-400" />{d.city}, {d.state}</span>
+                    <span>{count} location{count === 1 ? "" : "s"}</span>
+                  </div>
+                  <div className="mt-2 text-xs text-ink-500">Verification: <StatusBadge status={d.verificationStatus} /></div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </>
   );

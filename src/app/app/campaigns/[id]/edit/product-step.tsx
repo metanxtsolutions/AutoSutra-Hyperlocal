@@ -20,7 +20,7 @@ export function ProductStep({ full }: { full: FullCampaign }) {
             <TextField label="Campaign name" name="name" required defaultValue={c.name} />
             <SelectField label="Objective" name="objective" defaultValue={c.objective} options={OBJECTIVE_DEFS.map((o) => ({ value: o.value, label: `${o.group}: ${o.label}` }))} />
           </div>
-          <CardHeader title="Vehicle, service or offer" description="Step 3. Never enter prices, finance rates or offers that have not been confirmed." />
+          <CardHeader title="Vehicle, service or offer" description="Never enter prices, finance rates or offers that have not been confirmed." />
           <div className="grid gap-4 sm:grid-cols-3">
             <TextField label="Brand" name="brand" defaultValue={c.brand ?? ""} />
             <TextField label="Model" name="model" defaultValue={c.model ?? ""} />

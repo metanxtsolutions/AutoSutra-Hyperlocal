@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BuilderSteps } from "@/components/app/builder-steps";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Alert, Card, CardHeader, DescriptionList, PageHeader } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
@@ -39,11 +39,12 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   return (
     <>
       <PageHeader
-        eyebrow={<Link href={`/app/campaigns/${id}`} className="hover:underline">{c.name}</Link>}
-        title="Step 9 of 9: Review"
+        breadcrumbs={[{ label: "Campaigns", href: "/app/campaigns" }, { label: c.name, href: `/app/campaigns/${id}` }]}
+        title="Review and submit"
         description="Everything that will be sent to the ad platforms. Approval authorises this exact configuration and budget."
         actions={<StatusBadge status={c.status} />}
       />
+      {["draft", "changes_requested"].includes(c.status) && <BuilderSteps campaignId={id} current="review" />}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card>

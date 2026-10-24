@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import { Download } from "lucide-react";
 import { PageHeader } from "@/components/ui/card";
+import { humanize } from "@/components/ui/badge";
+import { buttonClass } from "@/components/ui/button";
+import { FilterBar, FilterInput, FilterSelect } from "@/components/ui/filter-bar";
 import { ReportView } from "@/components/app/report-view";
 import { OBJECTIVES } from "@/lib/objectives";
 import { can, requireOrg } from "@/server/auth/context";
@@ -12,7 +16,6 @@ import { LEAD_STATUSES } from "@/server/services/leads";
 
 export const metadata: Metadata = { title: "Reports" };
 
-const select = "h-9 rounded-md border border-ink-200 px-2 text-sm";
 
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const raw = await searchParams;
@@ -28,21 +31,20 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
       <PageHeader
         title="Reports"
         description="Provider-reported delivery and spend alongside the enquiries, test drives and sales your team records."
-        actions={can(actor, orgId, "reports.export") && <a href={`/api/reports/export?${qs}`} className="text-sm font-semibold text-road-600">Export CSV</a>}
+        actions={can(actor, orgId, "reports.export") && <a href={`/api/reports/export?${qs}`} className={buttonClass("secondary")}><Download />Export CSV</a>}
       />
-      <form method="get" className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border border-ink-200 bg-white p-3 text-sm">
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">From</span><input type="date" name="from" defaultValue={f.from} className={select} /></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">To</span><input type="date" name="to" defaultValue={f.to} className={select} /></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Dealership</span><select name="dealershipId" defaultValue={f.dealershipId ?? ""} className={select}><option value="">All</option>{dealers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Location</span><select name="locationId" defaultValue={f.locationId ?? ""} className={select}><option value="">All</option>{locs.map((l) => <option key={l.location.id} value={l.location.id}>{l.location.name}</option>)}</select></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Campaign</span><select name="campaignId" defaultValue={f.campaignId ?? ""} className={select}><option value="">All</option>{camps.map((c) => <option key={c.campaign.id} value={c.campaign.id}>{c.campaign.name}</option>)}</select></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Platform</span><select name="provider" defaultValue={f.provider ?? ""} className={select}><option value="">Both</option><option value="meta">Meta Ads</option><option value="google">Google Ads</option></select></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Objective</span><select name="objective" defaultValue={f.objective ?? ""} className={select}><option value="">All</option>{OBJECTIVES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Brand</span><input name="brand" defaultValue={f.brand} className={select} /></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Model</span><input name="model" defaultValue={f.model} className={select} /></label>
-        <label className="flex flex-col gap-1"><span className="text-xs text-ink-600">Lead status</span><select name="leadStatus" defaultValue={f.leadStatus ?? ""} className={select}><option value="">All</option>{LEAD_STATUSES.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}</select></label>
-        <button type="submit" className="h-9 rounded-md bg-ink-900 px-3 font-semibold text-white">Apply</button>
-      </form>
+      <FilterBar resetHref="/app/reports" active={Object.keys(raw).some((k) => raw[k])} className="mb-6">
+        <FilterInput type="date" name="from" label="From" defaultValue={f.from} />
+        <FilterInput type="date" name="to" label="To" defaultValue={f.to} />
+        <FilterSelect name="dealershipId" label="Dealership" defaultValue={f.dealershipId} options={dealers.map((d) => ({ value: d.id, label: d.name }))} />
+        <FilterSelect name="locationId" label="Location" defaultValue={f.locationId} options={locs.map((l) => ({ value: l.location.id, label: l.location.name }))} />
+        <FilterSelect name="campaignId" label="Campaign" defaultValue={f.campaignId} options={camps.map((c) => ({ value: c.campaign.id, label: c.campaign.name }))} />
+        <FilterSelect name="provider" label="Platform" allLabel="Both" defaultValue={f.provider} options={[{ value: "meta", label: "Meta Ads" }, { value: "google", label: "Google Ads" }]} />
+        <FilterSelect name="objective" label="Objective" defaultValue={f.objective} options={OBJECTIVES} />
+        <FilterInput name="brand" label="Brand" defaultValue={f.brand} />
+        <FilterInput name="model" label="Model" defaultValue={f.model} />
+        <FilterSelect name="leadStatus" label="Lead status" defaultValue={f.leadStatus} options={LEAD_STATUSES.map((s) => ({ value: s, label: humanize(s) }))} />
+      </FilterBar>
       <ReportView report={report} />
     </>
   );
