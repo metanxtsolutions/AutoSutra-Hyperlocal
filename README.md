@@ -53,7 +53,7 @@ npm run worker                  # publishing, sync, reconciliation, billing, ale
 
 Seeded accounts (development only): `admin@autosutra.local` (super admin), `finance@autosutra.local`, `ops@autosutra.local`, `owner@demo-motors.local` (dealer owner), `sales@demo-motors.local`.
 
-The seed also gives Demo Motors Group sample activity (`scripts/seed-sample.ts`), once, if it has no campaigns yet: a campaign published in demo mode, one waiting for approval, a draft, and 17 enquiries at different stages. Every sample record is labelled "(sample)". No provider spend or delivery is invented, so spend figures stay at ₹0 and cost figures show "–".
+The seed also gives Demo Motors Group sample activity (`scripts/seed-sample.ts`), once (it skips if sample campaigns already exist, and never changes existing records): a campaign published in demo mode, one waiting for approval, a draft, and 17 enquiries at different stages. Every sample record is labelled "(sample)". No provider spend or delivery is invented, so spend figures stay at ₹0 and cost figures show "–".
 
 Development helpers:
 

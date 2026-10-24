@@ -5,9 +5,10 @@
  * in demo mode (nothing is sent and no spend is reported) and the enquiries are
  * AutoSutra lead records marked "(sample)".
  *
- * Runs once per organisation: it does nothing if the organisation already has campaigns.
+ * Runs once per organisation: it does nothing if sample campaigns already exist.
+ * It only adds records; the organisation's own campaigns, leads and alerts are left as they are.
  */
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, like } from "drizzle-orm";
 import type { Database } from "../src/server/db/client";
 import { campaigns as campaignsTable, leads, locations, notifications } from "../src/server/db/schema";
 import { loadActor, type Actor } from "../src/server/auth/context";
@@ -94,8 +95,9 @@ const PEOPLE = [
 ] as const;
 
 export async function seedSampleActivity(db: Database, orgId: string, ownerId: string, salesId: string) {
-  const [existing] = await db.select({ n: count() }).from(campaignsTable).where(eq(campaignsTable.organisationId, orgId));
+  const [existing] = await db.select({ n: count() }).from(campaignsTable).where(and(eq(campaignsTable.organisationId, orgId), like(campaignsTable.name, "%(sample)")));
   if (existing.n > 0) return false;
+  const startedAt = new Date();
   const actor = await loadActor(db, ownerId, orgId, null, { mfaVerified: true });
   if (!actor?.membership) throw new Error("Seed owner has no membership");
   const locs = await db.select().from(locations).where(eq(locations.organisationId, orgId));
@@ -157,9 +159,10 @@ export async function seedSampleActivity(db: Database, orgId: string, ownerId: s
     await db.update(leads).set({ firstResponseAt: new Date(createdAt.getTime() + (6 + ((i * 37) % 180)) * 60_000) }).where(eq(leads.id, lead.id));
   }
 
-  // Keep the bell meaningful: only the newest few sample alerts stay unread.
-  const keep = await db.select({ id: notifications.id }).from(notifications).where(eq(notifications.organisationId, orgId)).orderBy(desc(notifications.createdAt)).limit(3);
-  const all = await db.select({ id: notifications.id }).from(notifications).where(and(eq(notifications.organisationId, orgId)));
+  // Keep the bell meaningful: only the newest few sample alerts stay unread. Alerts from before this run are untouched.
+  const ours = and(eq(notifications.organisationId, orgId), gte(notifications.createdAt, startedAt));
+  const keep = await db.select({ id: notifications.id }).from(notifications).where(ours).orderBy(desc(notifications.createdAt)).limit(3);
+  const all = await db.select({ id: notifications.id }).from(notifications).where(ours);
   const readIds = all.map((n) => n.id).filter((id) => !keep.some((k) => k.id === id));
   if (readIds.length) await db.update(notifications).set({ readAt: new Date() }).where(inArray(notifications.id, readIds));
   return true;
